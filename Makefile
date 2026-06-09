@@ -1,4 +1,4 @@
-.PHONY: help dev dev-build dev-logs down reset-db db-apply db-verify java-build java-test java-run test sync-fixtures smoke curl-sim curl-price curl-chart
+.PHONY: help dev dev-build dev-logs down stop stop-host-ports reset-db db-apply db-verify java-build java-test java-run test sync-fixtures smoke curl-sim curl-price curl-chart
 
 COMPOSE := docker compose
 export DATABASE_URL ?= postgresql://postgres:postgres@localhost:54329/ethsim
@@ -10,7 +10,8 @@ help:
 	@echo "  make dev-build    Build Java image and start postgres + java-service"
 	@echo "  make dev          Start stack (no rebuild)"
 	@echo "  make dev-logs     Tail compose logs"
-	@echo "  make down         Stop stack"
+	@echo "  make down         Stop Docker stack only"
+	@echo "  make stop         Stop Docker stack + host dev processes (8080/8000/3000)"
 	@echo "  make reset-db     Recreate postgres volume and re-apply schema"
 	@echo "  make db-apply     Apply WP-1 SQL to DATABASE_URL"
 	@echo "  make db-verify    Run WP-1 verification"
@@ -37,6 +38,21 @@ dev-logs:
 
 down:
 	$(COMPOSE) down
+
+stop:
+	-$(COMPOSE) down
+	@$(MAKE) stop-host-ports
+	@echo "All local dev sessions stopped."
+
+# Kill host-run services from prior make java-run / agent / frontend sessions.
+stop-host-ports:
+	@for port in 8080 8000 3000; do \
+		pids=$$(lsof -ti:$$port 2>/dev/null || true); \
+		if [ -n "$$pids" ]; then \
+			echo "Stopping process(es) on port $$port: $$pids"; \
+			kill $$pids 2>/dev/null || true; \
+		fi; \
+	done
 
 reset-db: down
 	$(COMPOSE) down -v
