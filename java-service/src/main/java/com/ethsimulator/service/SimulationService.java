@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,18 +29,23 @@ import java.util.UUID;
 @Service
 public class SimulationService {
 
+    private static final BigDecimal COLLATERAL_TOLERANCE_RATE = new BigDecimal("0.005");
+
     private final ProtocolPresetRegistry presetRegistry;
     private final EthSimulatorProperties properties;
     private final TreasuryContextBuilder treasuryContextBuilder;
+    private final Clock clock;
 
     public SimulationService(
             ProtocolPresetRegistry presetRegistry,
             EthSimulatorProperties properties,
-            TreasuryContextBuilder treasuryContextBuilder
+            TreasuryContextBuilder treasuryContextBuilder,
+            Clock clock
     ) {
         this.presetRegistry = presetRegistry;
         this.properties = properties;
         this.treasuryContextBuilder = treasuryContextBuilder;
+        this.clock = clock;
     }
 
     public SimulationResponse simulate(SimulationRequest request) {
@@ -82,6 +89,7 @@ public class SimulationService {
         String protocol = request.getProtocol();
         double ethAmountDouble = ethAmount.doubleValue();
         double ethPriceDouble = ethPriceUsd.doubleValue();
+        Instant generatedAt = clock.instant();
 
         List<ChartSpec> charts = new ArrayList<>();
         charts.add(ChartBuilders.yieldProjection(
@@ -92,21 +100,24 @@ public class SimulationService {
                 years,
                 compoundsPerYear,
                 ethPriceDouble,
-                ethAmountDouble
+                ethAmountDouble,
+                generatedAt
         ));
         charts.add(ChartBuilders.liquidationBand(
                 protocol,
                 ethPriceDouble,
                 result.liquidationPriceUsd().doubleValue(),
                 ethAmountDouble,
-                result.stablecoinDebtUsd().doubleValue()
+                result.stablecoinDebtUsd().doubleValue(),
+                generatedAt
         ));
         charts.add(ChartBuilders.healthRatioSweep(
                 protocol,
                 ethAmount,
                 result.stablecoinDebtUsd(),
                 liquidationRatio,
-                ethPriceUsd
+                ethPriceUsd,
+                generatedAt
         ));
 
         boolean treasuryEnabled = request.getTreasuryContextEnabled() == null
@@ -117,6 +128,7 @@ public class SimulationService {
                     request.getStablecoinReserveModel() != null
                             ? request.getStablecoinReserveModel()
                             : "usdc_style");
+            validateTreasuryOverrides(request, reserveModel);
             treasuryContext = treasuryContextBuilder.build(
                     result.stablecoinDebtUsd(),
                     result.projectedNetYieldUsd(),
@@ -131,7 +143,8 @@ public class SimulationService {
                     treasuryContext.yourMint().annualIssuerReserveYieldUsd(),
                     treasuryContext.personalComparison().yourDeFiProjectedNetYieldUsd(),
                     protocol,
-                    result.stablecoinDebtUsd().doubleValue()
+                    result.stablecoinDebtUsd().doubleValue(),
+                    generatedAt
             ));
         }
 
@@ -167,17 +180,49 @@ public class SimulationService {
     }
 
     private static BigDecimal resolveEthAmount(SimulationRequest request, BigDecimal ethPriceUsd) {
-        if (request.getCollateralUsd() != null) {
+        boolean hasEth = request.getEthAmount() != null;
+        boolean hasCollateral = request.getCollateralUsd() != null;
+
+        if (!hasEth && !hasCollateral) {
+            throw new ApiException(
+                    "INVALID_SIMULATION_INPUT",
+                    "Either ethAmount or collateralUsd is required",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        if (hasEth && hasCollateral) {
+            BigDecimal ethFromRequest = UsdMath.bd(request.getEthAmount());
+            BigDecimal collateralFromRequest = UsdMath.bd(request.getCollateralUsd());
+            BigDecimal impliedCollateral = ethFromRequest.multiply(ethPriceUsd);
+            BigDecimal tolerance = impliedCollateral.abs().multiply(COLLATERAL_TOLERANCE_RATE);
+            BigDecimal diff = impliedCollateral.subtract(collateralFromRequest).abs();
+            if (diff.compareTo(tolerance) > 0) {
+                throw new ApiException(
+                        "INVALID_SIMULATION_INPUT",
+                        "ethAmount and collateralUsd disagree beyond 0.5% tolerance",
+                        HttpStatus.BAD_REQUEST);
+            }
+            return ethFromRequest;
+        }
+
+        if (hasCollateral) {
             return UsdMath.bd(request.getCollateralUsd())
                     .divide(ethPriceUsd, 10, RoundingMode.HALF_UP);
         }
-        if (request.getEthAmount() != null) {
-            return UsdMath.bd(request.getEthAmount());
+
+        return UsdMath.bd(request.getEthAmount());
+    }
+
+    private static void validateTreasuryOverrides(SimulationRequest request, StablecoinReserveModel reserveModel) {
+        boolean hasReserveOverride = request.getReserveInTreasuriesPct() != null;
+        boolean hasTbillOverride = request.getTbillApyPct() != null;
+
+        if ((hasReserveOverride || hasTbillOverride) && reserveModel != StablecoinReserveModel.GENERIC) {
+            throw new ApiException(
+                    "INVALID_SIMULATION_INPUT",
+                    "reserveInTreasuriesPct and tbillApyPct overrides are only allowed for generic reserve model",
+                    HttpStatus.BAD_REQUEST);
         }
-        throw new ApiException(
-                "INVALID_SIMULATION_INPUT",
-                "Either ethAmount or collateralUsd is required",
-                HttpStatus.BAD_REQUEST);
     }
 
     private static BigDecimal overrideOrDefault(Double override, BigDecimal presetValue) {

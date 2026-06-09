@@ -32,6 +32,8 @@ public final class SimulationEngine {
             int years,
             int compoundsPerYear
     ) {
+        SimulationLimits.validateCompounding(years, compoundsPerYear);
+
         BigDecimal collateralValueUsd = ethAmount.multiply(ethPriceUsd);
         BigDecimal stablecoinDebtUsd = collateralValueUsd.divide(targetCollateralRatio, 10, RoundingMode.HALF_UP);
         BigDecimal liquidationPriceUsd = stablecoinDebtUsd.multiply(liquidationRatio)

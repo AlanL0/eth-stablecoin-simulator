@@ -1,5 +1,6 @@
 package com.ethsimulator.charts;
 
+import com.ethsimulator.simulation.RiskTier;
 import com.ethsimulator.simulation.SimulationEngine;
 import com.ethsimulator.util.UsdMath;
 
@@ -13,9 +14,6 @@ import static com.ethsimulator.charts.ChartModels.*;
 
 public final class ChartBuilders {
 
-    private static final String GENERATED_AT = "2026-06-09T12:00:01Z";
-    private static final String OBSERVED_AT = "2026-06-09T12:00:00Z";
-
     private ChartBuilders() {
     }
 
@@ -27,7 +25,8 @@ public final class ChartBuilders {
             int years,
             int compoundsPerYear,
             double ethPriceUsd,
-            double ethAmount
+            double ethAmount,
+            Instant generatedAt
     ) {
         int totalMonths = years * 12;
         List<Point> gross = new ArrayList<>();
@@ -62,6 +61,8 @@ public final class ChartBuilders {
             net.add(Point.ofXy(m, UsdMath.roundUsdDouble(grossUsd.subtract(feeUsd))));
         }
 
+        String timestamp = generatedAt.toString();
+
         return new ChartSpec(
                 "1.0",
                 "simulation_yield_projection",
@@ -80,14 +81,16 @@ public final class ChartBuilders {
                 ),
                 List.of(),
                 new Legend("bottom", true),
-                meta(protocol, ethPriceUsd, ethAmount, UsdMath.roundUsdDouble(stablecoinDebtUsd)),
+                meta(protocol, ethPriceUsd, ethAmount, UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp),
                 "java-service/simulation-chart-builder",
-                GENERATED_AT
+                timestamp
         );
     }
 
     public static ChartSpec liquidationBand(String protocol, double spotUsd, double liquidationUsd,
-                                              double ethAmount, double debtUsd) {
+                                              double ethAmount, double debtUsd, Instant generatedAt) {
+        String timestamp = generatedAt.toString();
+
         return new ChartSpec(
                 "1.0",
                 "liquidation_price_band",
@@ -105,9 +108,9 @@ public final class ChartBuilders {
                                 "Liquidation price", "high")
                 ),
                 null,
-                meta(protocol, spotUsd, ethAmount, debtUsd),
+                meta(protocol, spotUsd, ethAmount, debtUsd, timestamp),
                 "java-service/simulation-chart-builder",
-                GENERATED_AT
+                timestamp
         );
     }
 
@@ -116,7 +119,8 @@ public final class ChartBuilders {
             BigDecimal ethAmount,
             BigDecimal stablecoinDebtUsd,
             BigDecimal liquidationRatio,
-            BigDecimal spotUsd
+            BigDecimal spotUsd,
+            Instant generatedAt
     ) {
         double[] multipliers = {0.5, 0.75, 1.0, 1.25, 1.5};
         List<Point> points = new ArrayList<>();
@@ -131,6 +135,8 @@ public final class ChartBuilders {
             maxP = Math.max(maxP, p);
         }
 
+        String timestamp = generatedAt.toString();
+
         return new ChartSpec(
                 "1.0",
                 "health_ratio_sweep",
@@ -144,12 +150,13 @@ public final class ChartBuilders {
                 List.of(
                         new Annotation("spot_marker", "vertical_line", "x", UsdMath.roundUsdDouble(spotUsd), null,
                                 "Current ETH price", "info"),
-                        new Annotation("high_risk_band", "band", "y", 0.5, 1.25, "High risk zone", "high")
+                        new Annotation("high_risk_band", "band", "y", 0.5, RiskTier.CHART_HIGH_RISK_UPPER,
+                                "High risk zone", "high")
                 ),
                 null,
-                meta(protocol, spotUsd.doubleValue(), ethAmount.doubleValue(), UsdMath.roundUsdDouble(stablecoinDebtUsd)),
+                meta(protocol, spotUsd.doubleValue(), ethAmount.doubleValue(), UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp),
                 "java-service/simulation-chart-builder",
-                GENERATED_AT
+                timestamp
         );
     }
 
@@ -158,8 +165,11 @@ public final class ChartBuilders {
             double issuerYieldUsd,
             double defiNetYieldUsd,
             String protocol,
-            double debtUsd
+            double debtUsd,
+            Instant generatedAt
     ) {
+        String timestamp = generatedAt.toString();
+
         return new ChartSpec(
                 "1.0",
                 "stablecoin_treasury_context",
@@ -182,14 +192,14 @@ public final class ChartBuilders {
                 List.of(),
                 new Legend("bottom", true),
                 new Meta(null, protocol, null, null, debtUsd,
-                        List.of(new Source("tbillApyPct", "model_assumption", OBSERVED_AT, false))),
+                        List.of(new Source("tbillApyPct", "model_assumption", timestamp, false))),
                 "java-service/treasury-context-builder",
-                GENERATED_AT
+                timestamp
         );
     }
 
-    private static Meta meta(String protocol, double ethPriceUsd, double ethAmount, double debtUsd) {
+    private static Meta meta(String protocol, double ethPriceUsd, double ethAmount, double debtUsd, String observedAt) {
         return new Meta(null, protocol, ethPriceUsd, ethAmount, debtUsd,
-                List.of(new Source("ethPriceUsd", "static", OBSERVED_AT, false)));
+                List.of(new Source("ethPriceUsd", "static", observedAt, false)));
     }
 }

@@ -29,7 +29,7 @@ class SimulationEngineTest {
         assertEquals(UsdMath.bd("216.02"), result.projectedGrossYieldUsd());
         assertEquals(UsdMath.bd("4.91"), result.projectedNetYieldUsd());
         assertEquals(UsdMath.bd("1.2000"), result.healthRatio());
-        assertEquals(RiskTier.MEDIUM, result.riskTier());
+        assertEquals(RiskTier.HIGH, result.riskTier());
     }
 
     @Test

@@ -3,10 +3,14 @@ package com.ethsimulator.charts;
 import com.ethsimulator.util.UsdMath;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class ChartBuildersTest {
+
+    private static final Instant FIXTURE_TIME = Instant.parse("2026-06-09T12:00:01Z");
 
     @Test
     void yieldProjectionHasExpectedSeriesLengthForOneYear() {
@@ -18,7 +22,8 @@ class ChartBuildersTest {
                 1,
                 12,
                 3800,
-                2
+                2,
+                FIXTURE_TIME
         );
 
         assertEquals("simulation_yield_projection", chart.chartId());
@@ -27,6 +32,7 @@ class ChartBuildersTest {
         assertEquals(3, chart.series().get(2).points().size());
         assertEquals(0, chart.xAxis().domain().get(0));
         assertEquals(12.0, chart.xAxis().domain().get(1));
+        assertEquals(FIXTURE_TIME.toString(), chart.generatedAt());
     }
 
     @Test
@@ -39,7 +45,8 @@ class ChartBuildersTest {
                 1,
                 12,
                 3800,
-                2
+                2,
+                FIXTURE_TIME
         );
 
         var gross = chart.series().stream().filter(s -> "gross_yield".equals(s.id())).findFirst().orElseThrow();
@@ -53,7 +60,7 @@ class ChartBuildersTest {
 
     @Test
     void liquidationBandStructure() {
-        var chart = ChartBuilders.liquidationBand("maker_sky", 3800, 3166.67, 2, 4222.22);
+        var chart = ChartBuilders.liquidationBand("maker_sky", 3800, 3166.67, 2, 4222.22, FIXTURE_TIME);
 
         assertEquals("liquidation_price_band", chart.chartId());
         assertEquals("band", chart.chartType());
@@ -63,17 +70,24 @@ class ChartBuildersTest {
     }
 
     @Test
-    void healthSweepHasFivePoints() {
+    void healthSweepHasFivePointsAndAlignedRiskBand() {
         var chart = ChartBuilders.healthRatioSweep(
                 "maker_sky",
                 UsdMath.bd(2),
                 UsdMath.bd("4222.22"),
                 UsdMath.bd("1.50"),
-                UsdMath.bd(3800)
+                UsdMath.bd(3800),
+                FIXTURE_TIME
         );
 
         assertEquals("health_ratio_sweep", chart.chartId());
         assertEquals(5, chart.series().get(0).points().size());
         assertEquals(1.2, chart.series().get(0).points().get(2).y(), 0.05);
+
+        var highRiskBand = chart.annotations().stream()
+                .filter(a -> "high_risk_band".equals(a.id()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals(1.25, ((Number) highRiskBand.valueEnd()).doubleValue(), 0.001);
     }
 }

@@ -1,5 +1,8 @@
 package com.ethsimulator.api.dto;
 
+import com.ethsimulator.simulation.SimulationLimits;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,22 +21,28 @@ public class SimulationRequest {
     private String protocol;
 
     @Positive
+    @DecimalMax(value = "10.0", message = "must be <= 10")
     private Double targetCollateralRatio;
 
     @Positive
+    @DecimalMax(value = "10.0", message = "must be <= 10")
     private Double liquidationRatio;
 
     @PositiveOrZero
+    @DecimalMax(value = "100.0", message = "must be <= 100")
     private Double stabilityFeePct;
 
     @NotNull
     @PositiveOrZero
+    @DecimalMax(value = "100.0", message = "must be <= 100")
     private Double deployYieldPct = 5.0;
 
     @Min(0)
+    @Max(value = SimulationLimits.MAX_YEARS, message = "must be <= 50")
     private Integer years = 1;
 
     @Min(1)
+    @Max(value = SimulationLimits.MAX_COMPOUNDS_PER_YEAR, message = "must be <= 365")
     private Integer compoundsPerYear = 12;
 
     private Boolean treasuryContextEnabled = true;
@@ -41,9 +50,11 @@ public class SimulationRequest {
     private String stablecoinReserveModel = "usdc_style";
 
     @PositiveOrZero
+    @DecimalMax(value = "100.0", message = "must be <= 100")
     private Double reserveInTreasuriesPct;
 
     @PositiveOrZero
+    @DecimalMax(value = "100.0", message = "must be <= 100")
     private Double tbillApyPct;
 
     @Positive

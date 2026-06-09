@@ -6,9 +6,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.time.Clock;
+
 @Configuration
 @EnableConfigurationProperties(EthSimulatorProperties.class)
 public class AppConfig {
+
+    @Bean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
 
     @Bean
     public WebMvcConfigurer corsConfigurer(EthSimulatorProperties properties) {

@@ -1,0 +1,257 @@
+# OpenAPI 3.0 components stub — ChartSpecV1
+# Merge into Spring Boot springdoc output during WP-2/WP-6.
+# Source of truth for field names: docs/chart-spec-schema.md
+
+openapi: 3.0.3
+info:
+  title: ETH Stablecoin Simulator — Chart Components
+  version: 1.0.0-draft
+paths: {}
+
+components:
+  schemas:
+    ChartSpecV1:
+      type: object
+      required:
+        - schemaVersion
+        - chartId
+        - chartType
+        - title
+        - xAxis
+        - yAxis
+        - series
+        - source
+        - generatedAt
+      properties:
+        schemaVersion:
+          type: string
+          enum: ["1.0"]
+        chartId:
+          type: string
+          enum:
+            - simulation_yield_projection
+            - liquidation_price_band
+            - health_ratio_sweep
+            - stablecoin_treasury_context
+        chartType:
+          type: string
+          enum: [line, area, band, bar, composed]
+        title:
+          type: string
+        subtitle:
+          type: string
+        xAxis:
+          $ref: '#/components/schemas/ChartAxis'
+        yAxis:
+          $ref: '#/components/schemas/ChartAxis'
+        series:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChartSeries'
+        annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChartAnnotation'
+        legend:
+          $ref: '#/components/schemas/ChartLegend'
+        meta:
+          $ref: '#/components/schemas/ChartMeta'
+        source:
+          type: string
+          example: java-service/simulation-chart-builder
+        generatedAt:
+          type: string
+          format: date-time
+
+    ChartAxis:
+      type: object
+      required: [type, label]
+      properties:
+        type:
+          type: string
+          enum: [linear, time, category]
+        label:
+          type: string
+        unit:
+          type: string
+        format:
+          type: string
+          enum: [number, usd, percent, eth, month_index]
+        domain:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+        tickCount:
+          type: integer
+          minimum: 2
+
+    ChartSeries:
+      type: object
+      required: [id, name, geometry, points]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        geometry:
+          type: string
+          enum: [line, area, band, bar]
+        points:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ChartPoint'
+        style:
+          $ref: '#/components/schemas/ChartSeriesStyle'
+
+    ChartPoint:
+      type: object
+      required: [x]
+      properties:
+        x: {}
+        y:
+          type: number
+        y0:
+          type: number
+        y1:
+          type: number
+        label:
+          type: string
+
+    ChartSeriesStyle:
+      type: object
+      properties:
+        colorToken:
+          type: string
+          enum: [primary, secondary, positive, negative, warning, neutral]
+        strokeDash:
+          type: string
+          enum: [solid, dashed, dotted]
+        fillOpacity:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    ChartAnnotation:
+      type: object
+      required: [id, kind]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [horizontal_line, vertical_line, band, point, label]
+        axis:
+          type: string
+          enum: [x, y]
+        value: {}
+        valueEnd: {}
+        label:
+          type: string
+        severity:
+          type: string
+          enum: [info, low, medium, high]
+
+    ChartLegend:
+      type: object
+      properties:
+        position:
+          type: string
+          enum: [top, bottom, right, hidden]
+        show:
+          type: boolean
+
+    ChartMeta:
+      type: object
+      properties:
+        simulationId:
+          type: string
+          format: uuid
+        protocol:
+          type: string
+        ethPriceUsd:
+          type: number
+          format: double
+        ethAmount:
+          type: number
+          format: double
+        stablecoinDebtUsd:
+          type: number
+          format: double
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChartSource'
+
+    ChartSource:
+      type: object
+      required: [field, source, observedAt]
+      properties:
+        field:
+          type: string
+        source:
+          type: string
+        observedAt:
+          type: string
+          format: date-time
+        stale:
+          type: boolean
+
+    SimulationResponse:
+      type: object
+      required:
+        - collateralValueUsd
+        - stablecoinDebtUsd
+        - liquidationPriceUsd
+        - healthRatio
+        - riskTier
+        - assumptions
+        - charts
+      properties:
+        id:
+          type: string
+          format: uuid
+        collateralValueUsd:
+          type: number
+        stablecoinDebtUsd:
+          type: number
+        liquidationPriceUsd:
+          type: number
+        annualStabilityFeeUsd:
+          type: number
+        projectedGrossYieldUsd:
+          type: number
+        projectedNetYieldUsd:
+          type: number
+        healthRatio:
+          type: number
+        riskTier:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        warnings:
+          type: array
+          items:
+            type: string
+        assumptions:
+          type: object
+          additionalProperties: true
+        charts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChartSpecV1'
+
+  responses:
+    ChartSpecResponse:
+      description: Single chart spec
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChartSpecV1'
+          examples:
+            yield_projection:
+              summary: Yield projection
+              externalValue:
+                description: See docs/fixtures/charts/simulation-yield-projection.json

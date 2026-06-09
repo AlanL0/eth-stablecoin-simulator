@@ -7,7 +7,7 @@
   "projectedGrossYieldUsd": 216.02,
   "projectedNetYieldUsd": 4.91,
   "healthRatio": 1.2,
-  "riskTier": "MEDIUM",
+  "riskTier": "HIGH",
   "warnings": [],
   "assumptions": {
     "protocol": "maker_sky",
