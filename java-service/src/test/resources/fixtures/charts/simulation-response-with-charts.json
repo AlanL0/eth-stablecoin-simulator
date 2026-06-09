@@ -1,0 +1,32 @@
+{
+  "id": "00000000-0000-4000-8000-000000000001",
+  "collateralValueUsd": 7600,
+  "stablecoinDebtUsd": 4222.22,
+  "liquidationPriceUsd": 3166.67,
+  "annualStabilityFeeUsd": 211.11,
+  "projectedGrossYieldUsd": 216.02,
+  "projectedNetYieldUsd": 4.91,
+  "healthRatio": 1.2,
+  "riskTier": "MEDIUM",
+  "warnings": [],
+  "assumptions": {
+    "protocol": "maker_sky",
+    "ethAmount": 2,
+    "ethPriceUsd": 3800,
+    "ethPriceSource": "chainlink",
+    "targetCollateralRatio": 1.8,
+    "liquidationRatio": 1.5,
+    "stabilityFeePct": 5.0,
+    "deployYieldPct": 5.0,
+    "years": 1,
+    "compoundsPerYear": 12,
+    "stabilityFeeModel": "linear_annualized_v1"
+  },
+  "treasuryContextFixtureFile": "treasury-context-response.json",
+  "chartFixtureFiles": [
+    "simulation-yield-projection.json",
+    "liquidation-price-band.json",
+    "health-ratio-sweep.json",
+    "stablecoin-treasury-context.json"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "disclaimer": "Educational model only. Issuers earn reserve yield; Treasury benefits from debt demand, not issuer profits.",
+  "yourMintUsd": 4222.22,
+  "assumptions": {
+    "stablecoinReserveModel": "usdc_style",
+    "reserveInTreasuriesPct": 90,
+    "tbillApyPct": 4.5,
+    "backingRatio": 1.0,
+    "years": 1,
+    "systemSupplyUsd": 32000000000,
+    "systemSupplySource": "static_seed"
+  },
+  "yourMint": {
+    "impliedTreasuryBackingUsd": 3800.0,
+    "annualIssuerReserveYieldUsd": 171.0,
+    "projectedIssuerReserveYieldUsd": 171.0
+  },
+  "systemContext": {
+    "impliedTreasuryBackingUsd": 28800000000,
+    "annualIssuerReserveYieldUsd": 1296000000,
+    "treasuryDemandProxyUsd": 28800000000
+  },
+  "personalComparison": {
+    "yourDeFiProjectedNetYieldUsd": 4.91,
+    "note": "Your DeFi deploy yield vs illustrative issuer reserve yield on the same notional — different economics."
+  }
+}

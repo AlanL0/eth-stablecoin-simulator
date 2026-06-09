@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0",
+  "chartId": "stablecoin_treasury_context",
+  "chartType": "composed",
+  "title": "Stablecoin Reserves & Treasury Context (Educational)",
+  "subtitle": "Your mint vs illustrative issuer reserve economics — not official fiscal data. At ~$32B supply → ~$1.30B/yr issuer yield at assumptions.",
+  "xAxis": {
+    "type": "category",
+    "label": "Your simulation (USD)",
+    "format": "usd"
+  },
+  "yAxis": {
+    "type": "linear",
+    "label": "USD",
+    "unit": "usd",
+    "format": "usd"
+  },
+  "series": [
+    {
+      "id": "treasury_backing",
+      "name": "Implied T-bill backing (your mint)",
+      "geometry": "bar",
+      "points": [{ "x": "your_mint", "y": 3800.0 }],
+      "style": { "colorToken": "secondary" }
+    },
+    {
+      "id": "issuer_yield",
+      "name": "Issuer reserve yield (annual)",
+      "geometry": "bar",
+      "points": [{ "x": "your_mint", "y": 171.0 }],
+      "style": { "colorToken": "positive" }
+    },
+    {
+      "id": "your_defi_yield",
+      "name": "Your DeFi net yield (annual)",
+      "geometry": "bar",
+      "points": [{ "x": "your_mint", "y": 4.91 }],
+      "style": { "colorToken": "primary" }
+    }
+  ],
+  "annotations": [],
+  "legend": { "position": "bottom", "show": true },
+  "meta": {
+    "protocol": "maker_sky",
+    "stablecoinDebtUsd": 4222.22,
+    "sources": [
+      {
+        "field": "tbillApyPct",
+        "source": "model_assumption",
+        "observedAt": "2026-06-09T12:00:00Z",
+        "stale": false
+      },
+      {
+        "field": "systemSupplyUsd",
+        "source": "static_seed",
+        "observedAt": "2026-06-09T12:00:00Z",
+        "stale": false
+      }
+    ]
+  },
+  "source": "java-service/treasury-context-builder",
+  "generatedAt": "2026-06-09T12:00:01Z"
+}

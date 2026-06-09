@@ -12,12 +12,28 @@ Spring Boot 3, Java 21, web3j.
 
 ## Dev (WP-2+)
 
+From repo root:
+
+```bash
+make java-test      # mvn test
+make java-run       # spring-boot:run
+make curl-sim       # POST sample simulation
+make dev-build      # Docker: postgres + java-service
+```
+
+Or locally:
+
 ```bash
 mvn test
 mvn spring-boot:run
 ```
 
 Default port: `8080`
+
+### Endpoints (WP-2)
+
+- `GET /health`
+- `POST /api/simulations` — simulation result + embedded chart specs + optional `treasuryContext`
 
 ## Config
 

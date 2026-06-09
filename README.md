@@ -28,22 +28,47 @@ Do not commit secrets. Use `.env.example` as a template.
 - Node.js 20+
 - Java 21 + Maven 3.9+
 - Python 3.12
-- Docker (optional)
+- Docker (for `make dev-build`)
 
-## Quick start (after WP-1+)
+## Local dev (Makefile + Docker)
+
+```bash
+# Full stack: Postgres (54329) + Java API (8080)
+make dev-build
+
+# Health + sample simulation
+curl http://localhost:8080/health
+make curl-sim
+
+# Database schema (WP-1)
+make db-apply
+make db-verify
+
+# Java only on host (no Docker)
+make java-run          # http://localhost:8080
+make java-test         # mvn test
+
+make down              # stop containers
+make reset-db          # wipe postgres volume + re-apply schema
+```
+
+`DATABASE_URL` defaults to `postgresql://postgres:postgres@localhost:54329/ethsim`.
+
+## Quick start (individual services)
 
 ```bash
 # Database (WP-1)
-export DATABASE_URL='postgresql://...'
+export DATABASE_URL='postgresql://postgres:postgres@localhost:54329/ethsim'
 ./db/apply.sh && ./db/verify.sh
 
-# Java
-cd java-service && mvn spring-boot:run
+# Java (WP-2+)
+make java-run
+# or: cd java-service && mvn spring-boot:run
 
-# Python
+# Python (WP-5+)
 cd python-agent && pip install -e . && uvicorn app.main:app --reload
 
-# Frontend
+# Frontend (WP-7+)
 cd frontend && npm install && npm run dev
 ```
 

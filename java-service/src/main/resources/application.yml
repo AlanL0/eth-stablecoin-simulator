@@ -1,0 +1,11 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: java-service
+
+eth-simulator:
+  static-eth-price-usd: ${STATIC_ETH_PRICE_USD:3800}
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
+  default-system-supply-usd: 32000000000
