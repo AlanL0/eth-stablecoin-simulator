@@ -99,7 +99,7 @@ check "java health chart" \
 
 check "agent health" "$AGENT_BASE/health"
 
-REC_BODY='{"simulationResult":{"healthRatio":1.2,"riskTier":"MEDIUM","stablecoinDebtUsd":4222.22},"message":"How risky is this?","riskPreference":"conservative"}'
+REC_BODY='{"simulationResult":{"healthRatio":1.2,"riskTier":"HIGH","stablecoinDebtUsd":4222.22},"message":"How risky is this?","riskPreference":"conservative"}'
 check_post "agent recommend-yield" "$AGENT_BASE/agent/recommend-yield" "$REC_BODY"
 
 PARSE_BODY='{"message":"Show me bear and bull ETH scenarios as a chart","sessionId":"smoke-test"}'
