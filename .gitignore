@@ -7,9 +7,6 @@ ETH_Stablecoin_Simulator_Complete_Plan.md
 /docs/
 /planning/
 
-# Draft SQL (tracked implementation migrations added in WP-1+ under db/migrations/ if needed)
-/db/*.sql
-
 # Draft prompts (tracked prompts added in WP-5 under python-agent/prompts/ from local copies)
 /python-agent/prompts/
 

@@ -33,8 +33,9 @@ Do not commit secrets. Use `.env.example` as a template.
 ## Quick start (after WP-1+)
 
 ```bash
-# Database
-psql "$DATABASE_URL" -f db/schema.sql   # when WP-1 ships tracked SQL
+# Database (WP-1)
+export DATABASE_URL='postgresql://...'
+./db/apply.sh && ./db/verify.sh
 
 # Java
 cd java-service && mvn spring-boot:run

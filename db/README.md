@@ -1,19 +1,35 @@
-# Database
+# Database (WP-1)
 
-Supabase Postgres 15.
+Supabase Postgres 15 (or local Postgres for dev).
 
-## WP-1
+## Files
 
-Tracked implementation SQL will be added here (migrations or `schema.sql` copied from local planning drafts).
+| File | Purpose |
+|---|---|
+| `schema.sql` | Core tables + protocol seed |
+| `product_events.sql` | Analytics events + chart waitlist |
+| `feedback_backlog.sql` | Backlog views |
+| `feedback_resolve.sql` | `resolve_chart_feedback()` |
+| `apply.sh` | Apply all scripts in order |
+| `verify.sh` | WP-1 acceptance gate |
+| `rls.sql` | RLS policies — **WP-8 only** (not in apply.sh) |
+| `memberships.sql` | Billing entitlements — **WP-11 only** |
 
-Local planning drafts (`db/*.sql` in gitignore) include:
-
-- `schema.sql`, `feedback_backlog.sql`, `feedback_resolve.sql`, `product_events.sql`, `rls.sql`, `memberships.sql`
-
-Apply when WP-1 completes:
+## Apply
 
 ```bash
-psql "$DATABASE_URL" -f db/schema.sql
+export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/ethsim'
+chmod +x db/apply.sh db/verify.sh
+./db/apply.sh
+./db/verify.sh
 ```
 
-Never commit `DATABASE_URL` or service role keys.
+Or with Supabase pooled connection string from the dashboard (use service role for migrations).
+
+## Expected tables (WP-1 gate)
+
+`agent_runs`, `chart_waitlist`, `feedback_entries`, `home_layouts`, `product_events`, `profiles`, `protocol_presets`, `simulations`, `transfer_events`, `wallet_snapshots`, `yield_snapshots`
+
+## Security
+
+Never commit `DATABASE_URL` or service role keys. Use `.env` locally (gitignored).
