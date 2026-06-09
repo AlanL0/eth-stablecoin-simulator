@@ -26,6 +26,8 @@ public final class ChartBuilders {
             int compoundsPerYear,
             double ethPriceUsd,
             double ethAmount,
+            String ethPriceSource,
+            boolean ethPriceStale,
             Instant generatedAt
     ) {
         int totalMonths = years * 12;
@@ -81,14 +83,24 @@ public final class ChartBuilders {
                 ),
                 List.of(),
                 new Legend("bottom", true),
-                meta(protocol, ethPriceUsd, ethAmount, UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp),
+                meta(protocol, ethPriceUsd, ethAmount, UsdMath.roundUsdDouble(stablecoinDebtUsd),
+                        timestamp, ethPriceSource, ethPriceStale),
                 "java-service/simulation-chart-builder",
                 timestamp
         );
     }
 
-    public static ChartSpec liquidationBand(String protocol, double spotUsd, double liquidationUsd,
-                                              double ethAmount, double debtUsd, Instant generatedAt) {
+    public static ChartSpec liquidationBand(
+            String protocol,
+            double spotUsd,
+            double liquidationUsd,
+            double ethAmount,
+            double debtUsd,
+            String ethPriceSource,
+            boolean ethPriceStale,
+            String spotLabel,
+            Instant generatedAt
+    ) {
         String timestamp = generatedAt.toString();
 
         return new ChartSpec(
@@ -103,12 +115,12 @@ public final class ChartBuilders {
                         List.of(Point.band("range", liquidationUsd, spotUsd)),
                         new SeriesStyle("positive", null, 0.15))),
                 List.of(
-                        new Annotation("spot", "horizontal_line", "y", spotUsd, null, "ETH spot", "info"),
+                        new Annotation("spot", "horizontal_line", "y", spotUsd, null, spotLabel, "info"),
                         new Annotation("liquidation", "horizontal_line", "y", liquidationUsd, null,
                                 "Liquidation price", "high")
                 ),
                 null,
-                meta(protocol, spotUsd, ethAmount, debtUsd, timestamp),
+                meta(protocol, spotUsd, ethAmount, debtUsd, timestamp, ethPriceSource, ethPriceStale),
                 "java-service/simulation-chart-builder",
                 timestamp
         );
@@ -120,6 +132,8 @@ public final class ChartBuilders {
             BigDecimal stablecoinDebtUsd,
             BigDecimal liquidationRatio,
             BigDecimal spotUsd,
+            String ethPriceSource,
+            boolean ethPriceStale,
             Instant generatedAt
     ) {
         double[] multipliers = {0.5, 0.75, 1.0, 1.25, 1.5};
@@ -154,7 +168,8 @@ public final class ChartBuilders {
                                 "High risk zone", "high")
                 ),
                 null,
-                meta(protocol, spotUsd.doubleValue(), ethAmount.doubleValue(), UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp),
+                meta(protocol, spotUsd.doubleValue(), ethAmount.doubleValue(),
+                        UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp, ethPriceSource, ethPriceStale),
                 "java-service/simulation-chart-builder",
                 timestamp
         );
@@ -198,8 +213,16 @@ public final class ChartBuilders {
         );
     }
 
-    private static Meta meta(String protocol, double ethPriceUsd, double ethAmount, double debtUsd, String observedAt) {
+    private static Meta meta(
+            String protocol,
+            double ethPriceUsd,
+            double ethAmount,
+            double debtUsd,
+            String observedAt,
+            String ethPriceSource,
+            boolean ethPriceStale
+    ) {
         return new Meta(null, protocol, ethPriceUsd, ethAmount, debtUsd,
-                List.of(new Source("ethPriceUsd", "static", observedAt, false)));
+                List.of(new Source("ethPriceUsd", ethPriceSource, observedAt, ethPriceStale)));
     }
 }

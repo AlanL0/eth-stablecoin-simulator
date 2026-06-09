@@ -24,6 +24,8 @@ services:
     environment:
       STATIC_ETH_PRICE_USD: "3800"
       ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
+      ETH_RPC_URL: ${ETH_RPC_URL:-}
+      PUBLIC_PRICE_API_URL: ${PUBLIC_PRICE_API_URL:-}
       # DATABASE_URL optional until services write to DB (WP-4+)
     depends_on:
       postgres:

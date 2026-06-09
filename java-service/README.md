@@ -30,10 +30,15 @@ mvn spring-boot:run
 
 Default port: `8080`
 
-### Endpoints (WP-2)
+### Endpoints
 
 - `GET /health`
+- `GET /api/price/eth` — ETH/USD with labelled source chain (cache → Chainlink → public API → static)
+- `GET /api/yields?asset=USDC` — labelled yield assumptions (seed or static fallback)
 - `POST /api/simulations` — simulation result + embedded chart specs + optional `treasuryContext`
+- `GET /api/charts/simulation-projection` — yield chart spec (inline params)
+- `GET /api/charts/liquidation-band` — uses Java-resolved ETH price (client hint advisory only)
+- `GET /api/charts/health-ratio` — health ratio sweep chart spec
 
 ## Config
 

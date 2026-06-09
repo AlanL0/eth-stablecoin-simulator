@@ -1,5 +1,6 @@
-package com.ethsimulator.api.dto;
+package com.ethsimulator.charts;
 
+import com.ethsimulator.api.dto.SimulationRequest;
 import com.ethsimulator.simulation.SimulationLimits;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
@@ -9,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
-public class SimulationRequest {
+public class ChartQueryParams {
 
     @Positive
     private Double ethAmount;
@@ -17,51 +18,52 @@ public class SimulationRequest {
     @Positive
     private Double collateralUsd;
 
-    @Positive
-    private Double ethPriceUsd;
-
     @NotBlank
     private String protocol;
 
     @Positive
-    @DecimalMax(value = "10.0", message = "must be <= 10")
+    @DecimalMax("10.0")
     private Double targetCollateralRatio;
 
     @Positive
-    @DecimalMax(value = "10.0", message = "must be <= 10")
+    @DecimalMax("10.0")
     private Double liquidationRatio;
 
     @PositiveOrZero
-    @DecimalMax(value = "100.0", message = "must be <= 100")
+    @DecimalMax("100.0")
     private Double stabilityFeePct;
 
     @NotNull
     @PositiveOrZero
-    @DecimalMax(value = "100.0", message = "must be <= 100")
+    @DecimalMax("100.0")
     private Double deployYieldPct = 5.0;
 
     @Min(0)
-    @Max(value = SimulationLimits.MAX_YEARS, message = "must be <= 50")
+    @Max(SimulationLimits.MAX_YEARS)
     private Integer years = 1;
 
     @Min(1)
-    @Max(value = SimulationLimits.MAX_COMPOUNDS_PER_YEAR, message = "must be <= 365")
+    @Max(SimulationLimits.MAX_COMPOUNDS_PER_YEAR)
     private Integer compoundsPerYear = 12;
 
-    private Boolean treasuryContextEnabled = true;
-
-    private String stablecoinReserveModel = "usdc_style";
-
-    @PositiveOrZero
-    @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double reserveInTreasuriesPct;
-
-    @PositiveOrZero
-    @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double tbillApyPct;
-
     @Positive
-    private Double systemSupplyUsd;
+    private Double ethPriceUsd;
+
+    public SimulationRequest toSimulationRequest() {
+        SimulationRequest request = new SimulationRequest();
+        request.setEthAmount(ethAmount);
+        request.setCollateralUsd(collateralUsd);
+        request.setProtocol(protocol);
+        request.setTargetCollateralRatio(targetCollateralRatio);
+        request.setLiquidationRatio(liquidationRatio);
+        request.setStabilityFeePct(stabilityFeePct);
+        request.setDeployYieldPct(deployYieldPct);
+        request.setYears(years);
+        request.setCompoundsPerYear(compoundsPerYear);
+        request.setEthPriceUsd(ethPriceUsd);
+        request.setTreasuryContextEnabled(false);
+        return request;
+    }
 
     public Double getEthAmount() {
         return ethAmount;
@@ -77,14 +79,6 @@ public class SimulationRequest {
 
     public void setCollateralUsd(Double collateralUsd) {
         this.collateralUsd = collateralUsd;
-    }
-
-    public Double getEthPriceUsd() {
-        return ethPriceUsd;
-    }
-
-    public void setEthPriceUsd(Double ethPriceUsd) {
-        this.ethPriceUsd = ethPriceUsd;
     }
 
     public String getProtocol() {
@@ -143,43 +137,11 @@ public class SimulationRequest {
         this.compoundsPerYear = compoundsPerYear;
     }
 
-    public Boolean getTreasuryContextEnabled() {
-        return treasuryContextEnabled;
+    public Double getEthPriceUsd() {
+        return ethPriceUsd;
     }
 
-    public void setTreasuryContextEnabled(Boolean treasuryContextEnabled) {
-        this.treasuryContextEnabled = treasuryContextEnabled;
-    }
-
-    public String getStablecoinReserveModel() {
-        return stablecoinReserveModel;
-    }
-
-    public void setStablecoinReserveModel(String stablecoinReserveModel) {
-        this.stablecoinReserveModel = stablecoinReserveModel;
-    }
-
-    public Double getReserveInTreasuriesPct() {
-        return reserveInTreasuriesPct;
-    }
-
-    public void setReserveInTreasuriesPct(Double reserveInTreasuriesPct) {
-        this.reserveInTreasuriesPct = reserveInTreasuriesPct;
-    }
-
-    public Double getTbillApyPct() {
-        return tbillApyPct;
-    }
-
-    public void setTbillApyPct(Double tbillApyPct) {
-        this.tbillApyPct = tbillApyPct;
-    }
-
-    public Double getSystemSupplyUsd() {
-        return systemSupplyUsd;
-    }
-
-    public void setSystemSupplyUsd(Double systemSupplyUsd) {
-        this.systemSupplyUsd = systemSupplyUsd;
+    public void setEthPriceUsd(Double ethPriceUsd) {
+        this.ethPriceUsd = ethPriceUsd;
     }
 }

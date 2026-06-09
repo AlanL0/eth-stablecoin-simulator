@@ -1,4 +1,4 @@
-.PHONY: help dev dev-build dev-logs down reset-db db-apply db-verify java-build java-test java-run test sync-fixtures smoke curl-sim
+.PHONY: help dev dev-build dev-logs down reset-db db-apply db-verify java-build java-test java-run test sync-fixtures smoke curl-sim curl-price curl-chart
 
 COMPOSE := docker compose
 export DATABASE_URL ?= postgresql://postgres:postgres@localhost:54329/ethsim
@@ -20,6 +20,8 @@ help:
 	@echo "  make test         Alias for java-test"
 	@echo "  make sync-fixtures  Copy chart fixtures to java-service tests"
 	@echo "  make curl-sim     POST sample simulation to running java-service"
+	@echo "  make curl-price   GET /api/price/eth"
+	@echo "  make curl-chart   GET liquidation-band chart"
 	@echo "  make smoke        scripts/smoke-test.sh (needs agent+frontend later)"
 
 dev-build: java-build sync-fixtures
@@ -74,6 +76,12 @@ curl-sim:
 	curl -sS -X POST "$(JAVA_URL)/api/simulations" \
 		-H "Content-Type: application/json" \
 		-d '{"collateralUsd":7600,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}' | python3 -m json.tool
+
+curl-price:
+	curl -sS "$(JAVA_URL)/api/price/eth" | python3 -m json.tool
+
+curl-chart:
+	curl -sS "$(JAVA_URL)/api/charts/liquidation-band?ethAmount=2&protocol=maker_sky" | python3 -m json.tool
 
 smoke:
 	./scripts/smoke-test.sh "$(JAVA_URL)" "http://localhost:8000" "http://localhost:3000"

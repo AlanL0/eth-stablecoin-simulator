@@ -9,3 +9,7 @@ eth-simulator:
   static-eth-price-usd: ${STATIC_ETH_PRICE_USD:3800}
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:3000}
   default-system-supply-usd: 32000000000
+  eth-rpc-url: ${ETH_RPC_URL:}
+  public-price-api-url: ${PUBLIC_PRICE_API_URL:}
+  chainlink-eth-usd-feed: "0x5f4eC3Df9cbd43714FE2740f5E2617432640a174"
+  price-cache-ttl-seconds: 60

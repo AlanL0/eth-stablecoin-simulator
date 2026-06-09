@@ -6,11 +6,8 @@ import com.ethsimulator.api.dto.SimulationResponse.Assumptions;
 import com.ethsimulator.api.error.ApiException;
 import com.ethsimulator.charts.ChartBuilders;
 import com.ethsimulator.charts.ChartModels.ChartSpec;
-import com.ethsimulator.config.EthSimulatorProperties;
-import com.ethsimulator.simulation.ProtocolPreset;
-import com.ethsimulator.simulation.ProtocolPresetRegistry;
-import com.ethsimulator.simulation.SimulationEngine;
-import com.ethsimulator.simulation.SimulationEngine.Result;
+import com.ethsimulator.charts.LiquidationBandChartBuilder;
+import com.ethsimulator.service.SimulationInputResolver.ResolvedSimulation;
 import com.ethsimulator.treasury.StablecoinReserveModel;
 import com.ethsimulator.treasury.TreasuryContext;
 import com.ethsimulator.treasury.TreasuryContextBuilder;
@@ -19,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,94 +25,50 @@ import java.util.UUID;
 @Service
 public class SimulationService {
 
-    private static final BigDecimal COLLATERAL_TOLERANCE_RATE = new BigDecimal("0.005");
-
-    private final ProtocolPresetRegistry presetRegistry;
-    private final EthSimulatorProperties properties;
+    private final SimulationInputResolver simulationInputResolver;
     private final TreasuryContextBuilder treasuryContextBuilder;
+    private final LiquidationBandChartBuilder liquidationBandChartBuilder;
     private final Clock clock;
 
     public SimulationService(
-            ProtocolPresetRegistry presetRegistry,
-            EthSimulatorProperties properties,
+            SimulationInputResolver simulationInputResolver,
             TreasuryContextBuilder treasuryContextBuilder,
+            LiquidationBandChartBuilder liquidationBandChartBuilder,
             Clock clock
     ) {
-        this.presetRegistry = presetRegistry;
-        this.properties = properties;
+        this.simulationInputResolver = simulationInputResolver;
         this.treasuryContextBuilder = treasuryContextBuilder;
+        this.liquidationBandChartBuilder = liquidationBandChartBuilder;
         this.clock = clock;
     }
 
     public SimulationResponse simulate(SimulationRequest request) {
-        BigDecimal ethPriceUsd = properties.getStaticEthPriceUsd();
-        if (ethPriceUsd.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApiException("INVALID_SIMULATION_INPUT", "ETH price must be positive", HttpStatus.BAD_REQUEST);
-        }
-
-        BigDecimal ethAmount = resolveEthAmount(request, ethPriceUsd);
-        if (ethAmount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ApiException("INVALID_SIMULATION_INPUT", "ETH amount must be positive", HttpStatus.BAD_REQUEST);
-        }
-
-        ProtocolPreset preset = presetRegistry.find(request.getProtocol())
-                .orElseThrow(() -> new ApiException(
-                        "INVALID_SIMULATION_INPUT",
-                        "Unknown protocol: " + request.getProtocol(),
-                        HttpStatus.BAD_REQUEST));
-
-        BigDecimal targetCollateralRatio = overrideOrDefault(
-                request.getTargetCollateralRatio(), preset.collateralRatio());
-        BigDecimal liquidationRatio = overrideOrDefault(
-                request.getLiquidationRatio(), preset.liquidationRatio());
-        BigDecimal stabilityFeePct = overrideOrDefault(
-                request.getStabilityFeePct(), preset.stabilityFeePct());
-        BigDecimal deployYieldPct = UsdMath.bd(request.getDeployYieldPct());
-        int years = request.getYears();
-        int compoundsPerYear = request.getCompoundsPerYear();
-
-        Result result = SimulationEngine.compute(
-                ethAmount,
-                ethPriceUsd,
-                targetCollateralRatio,
-                liquidationRatio,
-                stabilityFeePct,
-                deployYieldPct,
-                years,
-                compoundsPerYear
-        );
-
-        String protocol = request.getProtocol();
-        double ethAmountDouble = ethAmount.doubleValue();
-        double ethPriceDouble = ethPriceUsd.doubleValue();
+        ResolvedSimulation resolved = simulationInputResolver.resolve(request);
         Instant generatedAt = clock.instant();
 
         List<ChartSpec> charts = new ArrayList<>();
         charts.add(ChartBuilders.yieldProjection(
-                protocol,
-                result.stablecoinDebtUsd(),
-                result.annualStabilityFeeUsd(),
-                deployYieldPct,
-                years,
-                compoundsPerYear,
-                ethPriceDouble,
-                ethAmountDouble,
+                resolved.protocol(),
+                resolved.result().stablecoinDebtUsd(),
+                resolved.result().annualStabilityFeeUsd(),
+                resolved.deployYieldPct(),
+                resolved.years(),
+                resolved.compoundsPerYear(),
+                resolved.ethPriceDouble(),
+                resolved.ethAmountDouble(),
+                resolved.ethPriceSourceKey(),
+                resolved.ethPrice().stale(),
                 generatedAt
         ));
-        charts.add(ChartBuilders.liquidationBand(
-                protocol,
-                ethPriceDouble,
-                result.liquidationPriceUsd().doubleValue(),
-                ethAmountDouble,
-                result.stablecoinDebtUsd().doubleValue(),
-                generatedAt
-        ));
+        charts.add(liquidationBandChartBuilder.build(resolved, generatedAt));
         charts.add(ChartBuilders.healthRatioSweep(
-                protocol,
-                ethAmount,
-                result.stablecoinDebtUsd(),
-                liquidationRatio,
-                ethPriceUsd,
+                resolved.protocol(),
+                resolved.ethAmount(),
+                resolved.result().stablecoinDebtUsd(),
+                resolved.liquidationRatio(),
+                resolved.ethPrice().priceUsd(),
+                resolved.ethPriceSourceKey(),
+                resolved.ethPrice().stale(),
                 generatedAt
         ));
 
@@ -130,38 +82,39 @@ public class SimulationService {
                             : "usdc_style");
             validateTreasuryOverrides(request, reserveModel);
             treasuryContext = treasuryContextBuilder.build(
-                    result.stablecoinDebtUsd(),
-                    result.projectedNetYieldUsd(),
+                    resolved.result().stablecoinDebtUsd(),
+                    resolved.result().projectedNetYieldUsd(),
                     reserveModel,
                     toBigDecimalOrNull(request.getReserveInTreasuriesPct()),
                     toBigDecimalOrNull(request.getTbillApyPct()),
                     toBigDecimalOrNull(request.getSystemSupplyUsd()),
-                    years
+                    resolved.years()
             );
             charts.add(ChartBuilders.treasuryContextChart(
                     treasuryContext.yourMint().impliedTreasuryBackingUsd(),
                     treasuryContext.yourMint().annualIssuerReserveYieldUsd(),
                     treasuryContext.personalComparison().yourDeFiProjectedNetYieldUsd(),
-                    protocol,
-                    result.stablecoinDebtUsd().doubleValue(),
+                    resolved.protocol(),
+                    resolved.result().stablecoinDebtUsd().doubleValue(),
                     generatedAt
             ));
         }
 
         Assumptions assumptions = new Assumptions(
-                protocol,
-                roundEthAmount(ethAmount),
-                ethPriceDouble,
-                "static",
-                targetCollateralRatio.doubleValue(),
-                liquidationRatio.doubleValue(),
-                stabilityFeePct.doubleValue(),
-                deployYieldPct.doubleValue(),
-                years,
-                compoundsPerYear,
+                resolved.protocol(),
+                resolved.roundEthAmount(),
+                resolved.ethPriceDouble(),
+                resolved.ethPriceSourceKey(),
+                resolved.targetCollateralRatio().doubleValue(),
+                resolved.liquidationRatio().doubleValue(),
+                resolved.stabilityFeePct().doubleValue(),
+                resolved.deployYieldPct().doubleValue(),
+                resolved.years(),
+                resolved.compoundsPerYear(),
                 "linear_annualized_v1"
         );
 
+        var result = resolved.result();
         return new SimulationResponse(
                 UUID.randomUUID(),
                 result.collateralValueUsd(),
@@ -179,40 +132,6 @@ public class SimulationService {
         );
     }
 
-    private static BigDecimal resolveEthAmount(SimulationRequest request, BigDecimal ethPriceUsd) {
-        boolean hasEth = request.getEthAmount() != null;
-        boolean hasCollateral = request.getCollateralUsd() != null;
-
-        if (!hasEth && !hasCollateral) {
-            throw new ApiException(
-                    "INVALID_SIMULATION_INPUT",
-                    "Either ethAmount or collateralUsd is required",
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        if (hasEth && hasCollateral) {
-            BigDecimal ethFromRequest = UsdMath.bd(request.getEthAmount());
-            BigDecimal collateralFromRequest = UsdMath.bd(request.getCollateralUsd());
-            BigDecimal impliedCollateral = ethFromRequest.multiply(ethPriceUsd);
-            BigDecimal tolerance = impliedCollateral.abs().multiply(COLLATERAL_TOLERANCE_RATE);
-            BigDecimal diff = impliedCollateral.subtract(collateralFromRequest).abs();
-            if (diff.compareTo(tolerance) > 0) {
-                throw new ApiException(
-                        "INVALID_SIMULATION_INPUT",
-                        "ethAmount and collateralUsd disagree beyond 0.5% tolerance",
-                        HttpStatus.BAD_REQUEST);
-            }
-            return ethFromRequest;
-        }
-
-        if (hasCollateral) {
-            return UsdMath.bd(request.getCollateralUsd())
-                    .divide(ethPriceUsd, 10, RoundingMode.HALF_UP);
-        }
-
-        return UsdMath.bd(request.getEthAmount());
-    }
-
     private static void validateTreasuryOverrides(SimulationRequest request, StablecoinReserveModel reserveModel) {
         boolean hasReserveOverride = request.getReserveInTreasuriesPct() != null;
         boolean hasTbillOverride = request.getTbillApyPct() != null;
@@ -225,15 +144,8 @@ public class SimulationService {
         }
     }
 
-    private static BigDecimal overrideOrDefault(Double override, BigDecimal presetValue) {
-        return override != null ? UsdMath.bd(override) : presetValue;
-    }
-
     private static BigDecimal toBigDecimalOrNull(Double value) {
         return value != null ? UsdMath.bd(value) : null;
     }
 
-    private static double roundEthAmount(BigDecimal ethAmount) {
-        return ethAmount.setScale(4, RoundingMode.HALF_UP).doubleValue();
-    }
 }

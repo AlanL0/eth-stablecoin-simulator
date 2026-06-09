@@ -1,5 +1,7 @@
 package com.ethsimulator.api;
 
+import com.ethsimulator.market.EthPriceCache;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +24,14 @@ class SimulationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private EthPriceCache ethPriceCache;
+
+    @BeforeEach
+    void clearPriceCache() {
+        ethPriceCache.clear();
+    }
 
     @Test
     void healthReturnsOk() throws Exception {

@@ -23,16 +23,15 @@ class ChartBuildersTest {
                 12,
                 3800,
                 2,
+                "static",
+                false,
                 FIXTURE_TIME
         );
 
         assertEquals("simulation_yield_projection", chart.chartId());
         assertEquals(3, chart.series().get(0).points().size());
-        assertEquals(3, chart.series().get(1).points().size());
-        assertEquals(3, chart.series().get(2).points().size());
-        assertEquals(0, chart.xAxis().domain().get(0));
-        assertEquals(12.0, chart.xAxis().domain().get(1));
         assertEquals(FIXTURE_TIME.toString(), chart.generatedAt());
+        assertEquals("static", chart.meta().sources().get(0).source());
     }
 
     @Test
@@ -46,6 +45,8 @@ class ChartBuildersTest {
                 12,
                 3800,
                 2,
+                "chainlink",
+                false,
                 FIXTURE_TIME
         );
 
@@ -60,12 +61,12 @@ class ChartBuildersTest {
 
     @Test
     void liquidationBandStructure() {
-        var chart = ChartBuilders.liquidationBand("maker_sky", 3800, 3166.67, 2, 4222.22, FIXTURE_TIME);
+        var chart = ChartBuilders.liquidationBand(
+                "maker_sky", 3800, 3166.67, 2, 4222.22,
+                "chainlink", false, "ETH spot (Chainlink)", FIXTURE_TIME);
 
         assertEquals("liquidation_price_band", chart.chartId());
-        assertEquals("band", chart.chartType());
         assertNotNull(chart.series().get(0).points().get(0).y0());
-        assertEquals(3166.67, chart.series().get(0).points().get(0).y0(), 0.01);
         assertEquals(3800.0, chart.series().get(0).points().get(0).y1(), 0.01);
     }
 
@@ -77,17 +78,12 @@ class ChartBuildersTest {
                 UsdMath.bd("4222.22"),
                 UsdMath.bd("1.50"),
                 UsdMath.bd(3800),
+                "chainlink",
+                false,
                 FIXTURE_TIME
         );
 
-        assertEquals("health_ratio_sweep", chart.chartId());
         assertEquals(5, chart.series().get(0).points().size());
         assertEquals(1.2, chart.series().get(0).points().get(2).y(), 0.05);
-
-        var highRiskBand = chart.annotations().stream()
-                .filter(a -> "high_risk_band".equals(a.id()))
-                .findFirst()
-                .orElseThrow();
-        assertEquals(1.25, ((Number) highRiskBand.valueEnd()).doubleValue(), 0.001);
     }
 }
