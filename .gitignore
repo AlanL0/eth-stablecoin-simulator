@@ -1,0 +1,114 @@
+# =============================================================================
+# PLANNING ARTIFACTS (local only — never push to remote)
+# Keep design docs, fixtures, and draft SQL on your machine only.
+# When implementing a WP, copy needed specs into tracked implementation files.
+# =============================================================================
+ETH_Stablecoin_Simulator_Complete_Plan.md
+/docs/
+/planning/
+
+# Draft SQL (tracked implementation migrations added in WP-1+ under db/migrations/ if needed)
+/db/*.sql
+
+# Draft prompts (tracked prompts added in WP-5 under python-agent/prompts/ from local copies)
+/python-agent/prompts/
+
+# =============================================================================
+# SECRETS & SENSITIVE CONFIG (never commit)
+# Add new patterns here when the project gains accounts, keys, or credentials.
+# =============================================================================
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+credentials/
+**/secrets/**
+**/credentials/**
+**/application-local.yml
+**/application-local.yaml
+**/application-local.properties
+**/application-prod.yml
+**/application-prod.properties
+**/application-secrets.yml
+.supabase/
+.supabase/**
+service-account*.json
+*-service-account.json
+firebase-adminsdk*.json
+.openrouter
+.vercel/.env*
+.netrc
+.npmrc
+!.npmrc.example
+.auth
+*.token
+*.secret
+**/local.settings.json
+
+# =============================================================================
+# DEPENDENCIES & BUILD OUTPUTS
+# =============================================================================
+node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/.turbo/
+target/
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+coverage/
+*.lcov
+.nyc_output/
+htmlcov/
+
+# =============================================================================
+# IDE & OS
+# =============================================================================
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# LOGS & TEMP
+# =============================================================================
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# =============================================================================
+# DOCKER & LOCAL DEPLOY OVERRIDES
+# =============================================================================
+docker-compose.override.yml
+.docker/
+
+# =============================================================================
+# TEST & REPORT ARTIFACTS
+# =============================================================================
+/test-results/
+/playwright-report/
+/smoke-body.json
