@@ -13,6 +13,7 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.EthFilter;
+import org.web3j.protocol.core.methods.request.Filter;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.Log;
@@ -44,7 +45,7 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
             )
     );
 
-    private static final String TRANSFER_TOPIC = EventEncoder.encode(TRANSFER_EVENT);
+    static final String TRANSFER_TOPIC = EventEncoder.encode(TRANSFER_EVENT);
 
     private final Web3j web3j;
     private final int lookbackBlocks;
@@ -78,7 +79,7 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
                     normalizedWallet,
                     blockTimestamps,
                     deduped,
-                    true
+                    WalletTransferDirection.SENT
             );
             if (deduped.size() >= maxEventsPerWallet) {
                 break;
@@ -91,7 +92,7 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
                     normalizedWallet,
                     blockTimestamps,
                     deduped,
-                    false
+                    WalletTransferDirection.RECEIVED
             );
         }
 
@@ -103,6 +104,30 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
         return "chain";
     }
 
+    enum WalletTransferDirection {
+        SENT,
+        RECEIVED
+    }
+
+    static EthFilter buildTransferFilter(
+            DefaultBlockParameter fromBlock,
+            DefaultBlockParameter toBlock,
+            String contractAddress,
+            String walletTopic,
+            WalletTransferDirection direction
+    ) {
+        EthFilter filter = new EthFilter(fromBlock, toBlock, contractAddress);
+        filter.addSingleTopic(TRANSFER_TOPIC);
+        if (direction == WalletTransferDirection.SENT) {
+            filter.addSingleTopic(walletTopic);
+            filter.addNullTopic();
+        } else {
+            filter.addNullTopic();
+            filter.addSingleTopic(walletTopic);
+        }
+        return filter;
+    }
+
     private void collectLogs(
             TokenAllowlist.TokenEntry token,
             DefaultBlockParameter fromBlock,
@@ -111,16 +136,16 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
             String normalizedWallet,
             Map<Long, Instant> blockTimestamps,
             Map<String, TransferEventRecord> deduped,
-            boolean walletIsSender
+            WalletTransferDirection direction
     ) {
         try {
-            EthFilter filter = new EthFilter(fromBlock, toBlock, token.contractAddress());
-            filter.addSingleTopic(TRANSFER_TOPIC);
-            if (walletIsSender) {
-                filter.addOptionalTopics(walletTopic, (String) null);
-            } else {
-                filter.addOptionalTopics((String) null, walletTopic);
-            }
+            EthFilter filter = buildTransferFilter(
+                    fromBlock,
+                    toBlock,
+                    token.contractAddress(),
+                    walletTopic,
+                    direction
+            );
 
             EthLog response = web3j.ethGetLogs(filter).send();
             if (response.hasError()) {
@@ -194,6 +219,13 @@ public class Web3jTransferEventFetcher implements TransferEventFetcher {
     static String addressToTopic(String normalizedAddress) {
         String hex = normalizedAddress.startsWith("0x") ? normalizedAddress.substring(2) : normalizedAddress;
         return "0x" + "0".repeat(24) + hex;
+    }
+
+    static String topicValue(Filter.FilterTopic<?> topic) {
+        if (topic instanceof Filter.SingleTopic singleTopic) {
+            return singleTopic.getValue();
+        }
+        return topic.getValue().toString();
     }
 
     private String topicToAddress(String topic) {

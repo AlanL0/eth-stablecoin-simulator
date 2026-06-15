@@ -4,13 +4,16 @@ WORKDIR /app
 
 RUN groupadd --system app && useradd --system --gid app --create-home app
 
-COPY pyproject.toml requirements.lock ./
+COPY requirements.lock ./
+RUN pip install --no-cache-dir -r requirements.lock
+
+COPY pyproject.toml ./
 COPY app ./app
 COPY agents ./agents
 COPY models ./models
 COPY prompts ./prompts
 
-RUN pip install --no-cache-dir -r requirements.lock
+RUN pip install --no-cache-dir --no-deps .
 
 USER app
 

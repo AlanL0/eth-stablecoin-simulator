@@ -21,8 +21,10 @@ from agents.services.request_limits import (
     ensure_json_size,
 )
 from agents.services.summarize_audit import summarize_audit
+from app.middleware import MaxBodySizeMiddleware
 
 app = FastAPI(title="ETH Stablecoin Python Agent", version="0.1.0")
+app.add_middleware(MaxBodySizeMiddleware)
 
 
 class HealthResponse(BaseModel):
@@ -146,22 +148,16 @@ def _verify_internal_api_key(x_internal_api_key: str | None) -> None:
 
 
 def _client_key(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if os.getenv("TRUST_PROXY_HEADERS", "").lower() in {"1", "true", "yes"}:
+        forwarded = request.headers.get("x-forwarded-for")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
     if request.client:
         return request.client.host
     return "unknown"
 
 
 def _enforce_public_agent_limits(request: Request) -> None:
-    content_length = request.headers.get("content-length")
-    if content_length is not None:
-        try:
-            if int(content_length) > MAX_JSON_BYTES:
-                raise HTTPException(status_code=413, detail="Request body too large")
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail="Invalid Content-Length header") from exc
     if not public_agent_limiter.allow(_client_key(request)):
         raise HTTPException(status_code=429, detail="Rate limit exceeded")
 
