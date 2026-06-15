@@ -2,13 +2,17 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-COPY pyproject.toml ./
+RUN groupadd --system app && useradd --system --gid app --create-home app
+
+COPY pyproject.toml requirements.lock ./
 COPY app ./app
 COPY agents ./agents
 COPY models ./models
 COPY prompts ./prompts
 
-RUN pip install --no-cache-dir -e .
+RUN pip install --no-cache-dir -r requirements.lock
+
+USER app
 
 EXPOSE 8000
 

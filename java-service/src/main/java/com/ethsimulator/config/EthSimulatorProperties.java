@@ -14,6 +14,15 @@ public class EthSimulatorProperties {
     private String publicPriceApiUrl = "";
     private String chainlinkEthUsdFeed = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5B8419";
     private int priceCacheTtlSeconds = 60;
+    /** Max blocks to scan per token for wallet audit (mainnet ~2s/block). Default ~7 days. */
+    private int auditLookbackBlocks = 300_000;
+    private int auditMaxEventsPerWallet = 500;
+    private int auditCacheMaxAddresses = 100;
+    private int auditCacheTtlSeconds = 900;
+    private int httpConnectTimeoutMs = 5_000;
+    private int httpReadTimeoutMs = 10_000;
+    private int rpcConnectTimeoutMs = 5_000;
+    private int rpcReadTimeoutMs = 30_000;
 
     public BigDecimal getStaticEthPriceUsd() {
         return staticEthPriceUsd;
@@ -69,5 +78,69 @@ public class EthSimulatorProperties {
 
     public void setPriceCacheTtlSeconds(int priceCacheTtlSeconds) {
         this.priceCacheTtlSeconds = priceCacheTtlSeconds;
+    }
+
+    public int getAuditLookbackBlocks() {
+        return auditLookbackBlocks;
+    }
+
+    public void setAuditLookbackBlocks(int auditLookbackBlocks) {
+        this.auditLookbackBlocks = auditLookbackBlocks;
+    }
+
+    public int getAuditMaxEventsPerWallet() {
+        return auditMaxEventsPerWallet;
+    }
+
+    public void setAuditMaxEventsPerWallet(int auditMaxEventsPerWallet) {
+        this.auditMaxEventsPerWallet = auditMaxEventsPerWallet;
+    }
+
+    public int getAuditCacheMaxAddresses() {
+        return auditCacheMaxAddresses;
+    }
+
+    public void setAuditCacheMaxAddresses(int auditCacheMaxAddresses) {
+        this.auditCacheMaxAddresses = auditCacheMaxAddresses;
+    }
+
+    public int getAuditCacheTtlSeconds() {
+        return auditCacheTtlSeconds;
+    }
+
+    public void setAuditCacheTtlSeconds(int auditCacheTtlSeconds) {
+        this.auditCacheTtlSeconds = auditCacheTtlSeconds;
+    }
+
+    public int getHttpConnectTimeoutMs() {
+        return httpConnectTimeoutMs;
+    }
+
+    public void setHttpConnectTimeoutMs(int httpConnectTimeoutMs) {
+        this.httpConnectTimeoutMs = httpConnectTimeoutMs;
+    }
+
+    public int getHttpReadTimeoutMs() {
+        return httpReadTimeoutMs;
+    }
+
+    public void setHttpReadTimeoutMs(int httpReadTimeoutMs) {
+        this.httpReadTimeoutMs = httpReadTimeoutMs;
+    }
+
+    public int getRpcConnectTimeoutMs() {
+        return rpcConnectTimeoutMs;
+    }
+
+    public void setRpcConnectTimeoutMs(int rpcConnectTimeoutMs) {
+        this.rpcConnectTimeoutMs = rpcConnectTimeoutMs;
+    }
+
+    public int getRpcReadTimeoutMs() {
+        return rpcReadTimeoutMs;
+    }
+
+    public void setRpcReadTimeoutMs(int rpcReadTimeoutMs) {
+        this.rpcReadTimeoutMs = rpcReadTimeoutMs;
     }
 }

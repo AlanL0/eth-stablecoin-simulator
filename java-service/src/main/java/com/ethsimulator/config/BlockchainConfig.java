@@ -14,19 +14,27 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
+import okhttp3.OkHttpClient;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class BlockchainConfig {
 
     @Bean
-    public Web3j web3j(Environment environment) {
+    public Web3j web3j(Environment environment, EthSimulatorProperties properties) {
         String rpcUrl = resolveRpcUrl(environment);
         if (!StringUtils.hasText(rpcUrl)) {
             return null;
         }
-        return Web3j.build(new HttpService(rpcUrl.trim()));
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(properties.getRpcConnectTimeoutMs(), TimeUnit.MILLISECONDS)
+                .readTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
+                .writeTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
+                .build();
+        return Web3j.build(new HttpService(rpcUrl.trim(), client));
     }
 
     @Bean
@@ -51,10 +59,17 @@ public class BlockchainConfig {
     }
 
     @Bean
-    public TransferEventFetcher transferEventFetcher(ObjectProvider<Web3j> web3jProvider) {
+    public TransferEventFetcher transferEventFetcher(
+            ObjectProvider<Web3j> web3jProvider,
+            EthSimulatorProperties properties
+    ) {
         Web3j web3j = web3jProvider.getIfAvailable();
         if (web3j != null) {
-            return new Web3jTransferEventFetcher(web3j);
+            return new Web3jTransferEventFetcher(
+                    web3j,
+                    properties.getAuditLookbackBlocks(),
+                    properties.getAuditMaxEventsPerWallet()
+            );
         }
         return new UnavailableTransferEventFetcher();
     }

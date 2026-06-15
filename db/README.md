@@ -153,3 +153,12 @@ select id, user_id from simulations; -- user A rows + user_id is null demo rows
 
 - Do not expose `DATABASE_URL` or service role keys to the frontend/Vercel
 - Do not expose `INTERNAL_API_KEY` to the browser bundle
+
+### Production persistence checklist
+
+Before enabling saved simulations in production:
+
+- Never store wallet-tied or private simulation payloads with `user_id = null` (anonymous rows are intentionally readable by any signed-in user per `simulations_select_own_or_anonymous`).
+- Keep Java/Python on service-role `DATABASE_URL` only — never in `NEXT_PUBLIC_*` env vars.
+- Tables without RLS (`agent_runs`, `feedback_entries`, etc.) must remain server-only via service role.
+- Rotate Supabase DB password and API keys if they were shared during setup.

@@ -2,6 +2,7 @@ package com.ethsimulator.audit;
 
 import com.ethsimulator.blockchain.TransferEventFetcher;
 import com.ethsimulator.blockchain.TransferEventRecord;
+import com.ethsimulator.config.EthSimulatorProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
@@ -33,7 +35,10 @@ class AuditServiceTest {
 
     @BeforeEach
     void setUp() {
-        auditCache = new AuditCache(transferEventFetcher);
+        EthSimulatorProperties properties = new EthSimulatorProperties();
+        properties.setAuditCacheMaxAddresses(100);
+        properties.setAuditCacheTtlSeconds(900);
+        auditCache = new AuditCache(transferEventFetcher, Clock.systemUTC(), properties);
         auditService = new AuditService(auditCache);
         when(transferEventFetcher.source()).thenReturn("chain");
     }

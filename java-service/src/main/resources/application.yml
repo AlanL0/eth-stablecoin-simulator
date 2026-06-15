@@ -13,3 +13,11 @@ eth-simulator:
   public-price-api-url: ${PUBLIC_PRICE_API_URL:}
   chainlink-eth-usd-feed: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5B8419"
   price-cache-ttl-seconds: 60
+  audit-lookback-blocks: 300000
+  audit-max-events-per-wallet: 500
+  audit-cache-max-addresses: 100
+  audit-cache-ttl-seconds: 900
+  http-connect-timeout-ms: 5000
+  http-read-timeout-ms: 10000
+  rpc-connect-timeout-ms: 5000
+  rpc-read-timeout-ms: 30000
