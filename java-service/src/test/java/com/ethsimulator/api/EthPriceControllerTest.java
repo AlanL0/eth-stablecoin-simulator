@@ -46,6 +46,7 @@ class EthPriceControllerTest {
                 .andExpect(jsonPath("$.priceUsd", closeTo(3850.0, 0.01)))
                 .andExpect(jsonPath("$.source", is("chainlink")))
                 .andExpect(jsonPath("$.observedAt").exists())
-                .andExpect(jsonPath("$.stale", is(false)));
+                .andExpect(jsonPath("$.stale", is(false)))
+                .andExpect(jsonPath("$.degraded", is(false)));
     }
 }

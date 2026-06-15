@@ -4,7 +4,10 @@ import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.config.EthSimulatorProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.Environment;
 import org.springframework.web.client.RestTemplate;
+
+import static org.mockito.Mockito.mock;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -18,6 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 
@@ -78,6 +82,7 @@ class EthPriceServiceTest {
 
         assertEquals(EthPriceSource.STATIC, quote.source());
         assertEquals(3800.0, quote.priceUsd().doubleValue(), 0.01);
+        assertTrue(quote.degraded());
     }
 
     @Test
@@ -89,6 +94,27 @@ class EthPriceServiceTest {
 
         assertEquals(EthPriceSource.CACHE, cached.source());
         assertEquals(3850.0, cached.priceUsd().doubleValue(), 0.01);
+    }
+
+    @Test
+    void refetchesAfterCacheExpires() {
+        MutableClock clock = new MutableClock(FIXED_INSTANT);
+        properties.setPriceCacheTtlSeconds(60);
+        EthPriceService service = new EthPriceService(
+                properties,
+                chainlinkReturning("3850.00"),
+                new PublicApiEthPriceClient(new RestTemplate()),
+                new EthPriceCache(clock),
+                clock,
+                mock(Environment.class)
+        );
+
+        service.currentPrice();
+        clock.advanceSeconds(61);
+        EthPriceQuote refreshed = service.currentPrice();
+
+        assertEquals(EthPriceSource.CHAINLINK, refreshed.source());
+        assertEquals(3850.0, refreshed.priceUsd().doubleValue(), 0.01);
     }
 
     @Test
@@ -109,11 +135,41 @@ class EthPriceServiceTest {
                 chainlinkReader,
                 new PublicApiEthPriceClient(new RestTemplate()),
                 cache,
-                FIXED_CLOCK
+                FIXED_CLOCK,
+                mock(Environment.class)
         );
     }
 
     private static ChainlinkEthUsdReader chainlinkReturning(String price) {
         return () -> Optional.of(new BigDecimal(price));
+    }
+
+    private static final class MutableClock extends Clock {
+        private Instant instant;
+        private final ZoneOffset zone;
+
+        private MutableClock(Instant instant) {
+            this.instant = instant;
+            this.zone = ZoneOffset.UTC;
+        }
+
+        void advanceSeconds(long seconds) {
+            instant = instant.plusSeconds(seconds);
+        }
+
+        @Override
+        public ZoneOffset getZone() {
+            return zone;
+        }
+
+        @Override
+        public Clock withZone(java.time.ZoneId zone) {
+            return Clock.fixed(instant, zone);
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
+        }
     }
 }

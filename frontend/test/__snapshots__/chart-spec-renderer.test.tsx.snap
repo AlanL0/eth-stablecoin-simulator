@@ -1,0 +1,291 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
+<div>
+  <section
+    aria-label="Health Ratio Across ETH Prices"
+    class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
+  >
+    <header
+      class="mb-3"
+    >
+      <h3
+        class="text-lg font-semibold text-slate-100"
+      >
+        Health Ratio Across ETH Prices
+      </h3>
+      <p
+        class="mt-1 text-sm text-slate-400"
+      >
+        Single-scenario sweep at current debt and protocol assumptions
+      </p>
+    </header>
+    <div
+      class="h-72 w-full"
+    >
+      <div
+        class="recharts-responsive-container"
+        style="width: 100%; height: 100%; min-width: 0;"
+      />
+      <table
+        class="sr-only"
+      >
+        <caption>
+          Health Ratio Across ETH Prices
+        </caption>
+        <thead>
+          <tr>
+            <th>
+              ETH price
+            </th>
+            <th>
+              Health ratio
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              1900
+            </td>
+            <td>
+              0.6
+            </td>
+          </tr>
+          <tr>
+            <td>
+              2850
+            </td>
+            <td>
+              0.9
+            </td>
+          </tr>
+          <tr>
+            <td>
+              3800
+            </td>
+            <td>
+              1.2
+            </td>
+          </tr>
+          <tr>
+            <td>
+              4750
+            </td>
+            <td>
+              1.5
+            </td>
+          </tr>
+          <tr>
+            <td>
+              5700
+            </td>
+            <td>
+              1.8
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer
+      class="mt-3 text-xs text-slate-500"
+    >
+      <span>
+        Source: 
+        chainlink
+         (
+        ethPriceUsd
+        ) ·
+         
+      </span>
+      <span>
+        Generated 
+        2026-06-09T12:00:01Z
+      </span>
+    </footer>
+  </section>
+</div>
+`;
+
+exports[`ChartSpecRenderer > matches snapshot for liquidation-price-band 1`] = `
+<div>
+  <section
+    aria-label="ETH Spot vs Liquidation Price"
+    class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
+  >
+    <header
+      class="mb-3"
+    >
+      <h3
+        class="text-lg font-semibold text-slate-100"
+      >
+        ETH Spot vs Liquidation Price
+      </h3>
+    </header>
+    <div
+      class="h-72 w-full"
+    >
+      <div
+        class="recharts-responsive-container"
+        style="width: 100%; height: 100%; min-width: 0;"
+      />
+      <table
+        class="sr-only"
+      >
+        <caption>
+          ETH Spot vs Liquidation Price
+        </caption>
+        <thead>
+          <tr>
+            <th>
+              Price marker
+            </th>
+            <th>
+              Collateral buffer
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              range
+            </td>
+            <td />
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer
+      class="mt-3 text-xs text-slate-500"
+    >
+      <span>
+        Source: 
+        chainlink
+         (
+        ethPriceUsd
+        ) ·
+         
+      </span>
+      <span>
+        Generated 
+        2026-06-09T12:00:01Z
+      </span>
+    </footer>
+  </section>
+</div>
+`;
+
+exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`] = `
+<div>
+  <section
+    aria-label="Projected Yield vs Fees"
+    class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
+  >
+    <header
+      class="mb-3"
+    >
+      <h3
+        class="text-lg font-semibold text-slate-100"
+      >
+        Projected Yield vs Fees
+      </h3>
+      <p
+        class="mt-1 text-sm text-slate-400"
+      >
+        Based on model assumptions — not live protocol guarantees
+      </p>
+    </header>
+    <div
+      class="h-72 w-full"
+    >
+      <div
+        class="recharts-responsive-container"
+        style="width: 100%; height: 100%; min-width: 0;"
+      />
+      <table
+        class="sr-only"
+      >
+        <caption>
+          Projected Yield vs Fees
+        </caption>
+        <thead>
+          <tr>
+            <th>
+              Month
+            </th>
+            <th>
+              Gross yield
+            </th>
+            <th>
+              Cumulative stability fees
+            </th>
+            <th>
+              Net yield
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              0
+            </td>
+            <td>
+              0
+            </td>
+            <td>
+              0
+            </td>
+            <td>
+              0
+            </td>
+          </tr>
+          <tr>
+            <td>
+              6
+            </td>
+            <td>
+              106.67
+            </td>
+            <td>
+              105.56
+            </td>
+            <td>
+              1.11
+            </td>
+          </tr>
+          <tr>
+            <td>
+              12
+            </td>
+            <td>
+              216.02
+            </td>
+            <td>
+              211.11
+            </td>
+            <td>
+              4.91
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <footer
+      class="mt-3 text-xs text-slate-500"
+    >
+      <span>
+        Source: 
+        chainlink
+         (
+        ethPriceUsd
+        ) ·
+         
+      </span>
+      <span>
+        Generated 
+        2026-06-09T12:00:01Z
+      </span>
+    </footer>
+  </section>
+</div>
+`;

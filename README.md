@@ -77,7 +77,14 @@ db/             Postgres schema (profiles, simulations, feedback backlog, …)
 | WP-1 Database schema | Done |
 | WP-2 Java core simulator | Done |
 | WP-3 Market data + chart APIs | Done |
-| WP-4–11 (wallet, agent, frontend, auth, CI, …) | Planned |
+| WP-4 Wallet + audit lite | Done |
+| WP-5 Python agent core | Done |
+| WP-6 API contracts + typegen | Done |
+| WP-7 Frontend MVP | Done |
+| WP-8 Auth + saved state | Done |
+| WP-9 CI | Done |
+| WP-10 Deployment + smoke | Ready (configure env + deploy) |
+| WP-11 Advanced chart membership | Backlog |
 
 **Implemented Java API (today)**
 
@@ -88,30 +95,40 @@ db/             Postgres schema (profiles, simulations, feedback backlog, …)
 - `GET /api/charts/simulation-projection`
 - `GET /api/charts/liquidation-band`
 - `GET /api/charts/health-ratio`
+- `GET /api/wallet/{address}/stablecoins`
+- `GET /api/audit/{address}` (+ CSV/JSON export)
+- Python: `GET /health`, `POST /agent/recommend-yield`, `POST /agent/parse-goal`, `POST /agent/summarize-audit`
 
 ---
 
 ## Quick start
 
-**Prerequisites:** Java 21, Maven 3.9+, Docker (optional), Node/Python when frontend and agent land.
+**Prerequisites:** Java 21, Maven 3.9+, Python 3.11+, Node 22+, Docker (optional).
 
 ```bash
 git clone https://github.com/AlanL0/eth-stablecoin-simulator.git
 cd eth-stablecoin-simulator
 cp .env.example .env   # fill ETH_RPC_URL etc. locally; never commit .env
 
-make stop              # stop any prior Docker / host sessions
-make dev-build         # Postgres :54329 + Java API :8080
+make stop              # stop: OK
+make all               # Postgres + Java + agent + frontend (background)
 make curl-price        # ETH price + source
-make curl-sim          # sample simulation
-make java-test         # full test suite
+make test              # Java + agent + frontend test suites
+make smoke             # end-to-end smoke (after make all)
 ```
 
-Host-only Java (no Docker):
+Foreground (one service per terminal):
 
 ```bash
-make stop
 make java-run          # http://localhost:8080
+make agent-run         # http://localhost:8000
+make web-run           # http://localhost:3000
+```
+
+Docker Java + Postgres only:
+
+```bash
+make dev-build         # Postgres :54329 + Java API :8080
 ```
 
 Database (optional until persistence features ship):

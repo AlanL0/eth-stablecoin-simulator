@@ -1,0 +1,211 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ETH Stablecoin Python Agent",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "agentHealth",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/recommend-yield": {
+      "post": {
+        "operationId": "recommendYield",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RecommendYieldRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Yield recommendations",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RecommendYieldResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/parse-goal": {
+      "post": {
+        "operationId": "parseGoal",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ParseGoalRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Parsed goal",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ParseGoalResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agent/summarize-audit": {
+      "post": {
+        "operationId": "summarizeAudit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SummarizeAuditRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audit summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SummarizeAuditResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string" },
+          "service": { "type": "string" }
+        }
+      },
+      "RecommendYieldRequest": {
+        "type": "object",
+        "required": ["simulationResult"],
+        "properties": {
+          "simulationResult": { "type": "object", "additionalProperties": true },
+          "availableYields": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "riskPreference": { "type": "string", "default": "balanced" },
+          "message": { "type": "string", "default": "" },
+          "sessionId": { "type": "string", "nullable": true }
+        }
+      },
+      "RecommendYieldResponse": {
+        "type": "object",
+        "properties": {
+          "summary": { "type": "string" },
+          "recommendations": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "assumptions": { "type": "array", "items": { "type": "string" } },
+          "toolsUsed": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ToolUsedEntry" }
+          },
+          "chartSpecs": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "feedback": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FeedbackEntry" }
+          },
+          "model": { "type": "string" },
+          "fallbackUsed": { "type": "boolean" }
+        }
+      },
+      "ParseGoalRequest": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string" },
+          "sessionId": { "type": "string", "nullable": true },
+          "simulationResult": { "type": "object", "additionalProperties": true, "nullable": true }
+        }
+      },
+      "ParseGoalResponse": {
+        "type": "object",
+        "properties": {
+          "intent": { "type": "string" },
+          "entities": { "type": "object", "additionalProperties": true },
+          "suggestedAction": { "type": "string" },
+          "confidence": { "type": "number" },
+          "toolsUsed": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ToolUsedEntry" }
+          },
+          "chartSpecs": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "feedback": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FeedbackEntry" }
+          }
+        }
+      },
+      "SummarizeAuditRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "hideValues": { "type": "boolean", "default": false }
+        }
+      },
+      "SummarizeAuditResponse": {
+        "type": "object",
+        "properties": {
+          "summary": { "type": "string" },
+          "notablePatterns": { "type": "array", "items": { "type": "string" } },
+          "risks": { "type": "array", "items": { "type": "string" } },
+          "assumptions": { "type": "array", "items": { "type": "string" } },
+          "model": { "type": "string" },
+          "fallbackUsed": { "type": "boolean" }
+        }
+      },
+      "ToolUsedEntry": {
+        "type": "object",
+        "properties": {
+          "tool": { "type": "string" },
+          "latencyMs": { "type": "integer" },
+          "success": { "type": "boolean" },
+          "chartId": { "type": "string", "nullable": true }
+        }
+      },
+      "FeedbackEntry": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string" },
+          "normalizedLabel": { "type": "string" },
+          "requestCount": { "type": "integer" },
+          "backlogEscalated": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      }
+    }
+  }
+}

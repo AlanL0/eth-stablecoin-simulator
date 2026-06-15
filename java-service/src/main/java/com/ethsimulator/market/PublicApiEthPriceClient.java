@@ -8,6 +8,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -41,6 +43,15 @@ public class PublicApiEthPriceClient {
         JsonNode ethereum = root.path("ethereum").path("usd");
         if (ethereum.isNumber()) {
             return Optional.of(BigDecimal.valueOf(ethereum.asDouble()));
+        }
+        // CoinGecko simple/price: { "ethereum": { "usd": N } } — any top-level coin id
+        Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
+        while (fields.hasNext()) {
+            Map.Entry<String, JsonNode> entry = fields.next();
+            JsonNode usd = entry.getValue().path("usd");
+            if (usd.isNumber()) {
+                return Optional.of(BigDecimal.valueOf(usd.asDouble()));
+            }
         }
         JsonNode priceUsd = root.path("priceUsd");
         if (priceUsd.isNumber()) {

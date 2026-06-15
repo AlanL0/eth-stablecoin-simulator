@@ -67,6 +67,20 @@ echo
 
 check "java health" "$JAVA_BASE/health"
 check "java eth price" "$JAVA_BASE/api/price/eth"
+if command -v jq >/dev/null 2>&1; then
+  price_source="$(jq -r '.source // empty' /tmp/smoke-body.json 2>/dev/null)"
+  price_degraded="$(jq -r '.degraded // empty' /tmp/smoke-body.json 2>/dev/null)"
+  if [[ "$price_source" == "chainlink" || "$price_source" == "public_api" ]]; then
+    echo "PASS  java eth price live source ($price_source)"
+    pass=$((pass + 1))
+  elif [[ "$price_source" == "static" && "$price_degraded" == "true" ]]; then
+    echo "WARN  java eth price static/degraded (configure ETH_RPC_URL for live price)"
+    pass=$((pass + 1))
+  else
+    echo "FAIL  java eth price source metadata (source=$price_source, degraded=$price_degraded)"
+    fail=$((fail + 1))
+  fi
+fi
 check "java yields" "$JAVA_BASE/api/yields?asset=USDC"
 
 SIM_BODY='{"ethAmount":2,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}'
@@ -96,6 +110,9 @@ fi
 
 check "java health chart" \
   "$JAVA_BASE/api/charts/health-ratio?ethAmount=2&protocol=maker_sky&deployYieldPct=5&years=1"
+
+check "java wallet endpoint" "$JAVA_BASE/api/wallet/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/stablecoins"
+check "java audit endpoint" "$JAVA_BASE/api/audit/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
 
 check "agent health" "$AGENT_BASE/health"
 

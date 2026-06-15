@@ -7,8 +7,7 @@ ETH_Stablecoin_Simulator_Complete_Plan.md
 /docs/
 /planning/
 
-# Draft prompts (tracked prompts added in WP-5 under python-agent/prompts/ from local copies)
-/python-agent/prompts/
+
 
 # =============================================================================
 # SECRETS & SENSITIVE CONFIG (never commit)
@@ -48,6 +47,9 @@ firebase-adminsdk*.json
 *.token
 *.secret
 **/local.settings.json
+
+# Local dev process logs and pid files (make all / make stop)
+.run/
 
 # =============================================================================
 # DEPENDENCIES & BUILD OUTPUTS

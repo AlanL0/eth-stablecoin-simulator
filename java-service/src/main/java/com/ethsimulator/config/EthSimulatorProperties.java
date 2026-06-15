@@ -12,7 +12,7 @@ public class EthSimulatorProperties {
     private BigDecimal defaultSystemSupplyUsd = new BigDecimal("32000000000");
     private String ethRpcUrl = "";
     private String publicPriceApiUrl = "";
-    private String chainlinkEthUsdFeed = "0x5f4eC3Df9cbd43714FE2740f5E2617432640a174";
+    private String chainlinkEthUsdFeed = "0x5f4eC3Df9cbd43714FE2740f5E3616155c5B8419";
     private int priceCacheTtlSeconds = 60;
 
     public BigDecimal getStaticEthPriceUsd() {

@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
-# Copy chart fixtures from docs/ to service test directories.
-# Status: planning artifact — run after WP-0 scaffold creates target dirs.
-
+# Sync committed chart fixtures into service test directories.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SRC="$ROOT/docs/fixtures/charts"
 
-if [[ ! -d "$SRC" ]]; then
-  echo "Planning fixtures not found at $SRC (gitignored local docs/). Copy fixtures manually or keep docs/ locally."
-  exit 1
-fi
-
-copy() {
-  local dest="$1"
+copy_tree() {
+  local src="$1"
+  local dest="$2"
+  [[ "$(cd "$src" && pwd)" == "$(cd "$dest" && pwd 2>/dev/null || echo "$dest")" ]] && return 0
   mkdir -p "$dest"
-  cp "$SRC"/*.json "$dest/"
-  echo "synced → $dest"
+  cp -f "$src"/*.json "$dest/"
 }
 
-copy "$ROOT/java-service/src/test/resources/fixtures/charts"
-copy "$ROOT/python-agent/tests/fixtures/charts"
-copy "$ROOT/frontend/test/fixtures/charts"
+SRC="$ROOT/frontend/test/fixtures/charts"
+if [[ ! -d "$SRC" ]]; then
+  SRC="$ROOT/java-service/src/test/resources/fixtures/charts"
+fi
 
-echo "done"
+if [[ ! -d "$SRC" ]] || ! compgen -G "$SRC/*.json" >/dev/null; then
+  exit 0
+fi
+
+copy_tree "$SRC" "$ROOT/java-service/src/test/resources/fixtures/charts"
+copy_tree "$SRC" "$ROOT/python-agent/tests/fixtures/charts"
+copy_tree "$SRC" "$ROOT/frontend/test/fixtures/charts"

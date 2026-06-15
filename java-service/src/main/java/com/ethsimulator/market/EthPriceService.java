@@ -2,7 +2,9 @@ package com.ethsimulator.market;
 
 import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.config.EthSimulatorProperties;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,19 +23,22 @@ public class EthPriceService {
     private final PublicApiEthPriceClient publicApiClient;
     private final EthPriceCache cache;
     private final Clock clock;
+    private final Environment environment;
 
     public EthPriceService(
             EthSimulatorProperties properties,
             ChainlinkEthUsdReader chainlinkReader,
             PublicApiEthPriceClient publicApiClient,
             EthPriceCache cache,
-            Clock clock
+            Clock clock,
+            Environment environment
     ) {
         this.properties = properties;
         this.chainlinkReader = chainlinkReader;
         this.publicApiClient = publicApiClient;
         this.cache = cache;
         this.clock = clock;
+        this.environment = environment;
     }
 
     public EthPriceQuote currentPrice() {
@@ -49,7 +54,7 @@ public class EthPriceService {
         BigDecimal drift = hint.subtract(quote.priceUsd()).abs()
                 .divide(quote.priceUsd(), 10, RoundingMode.HALF_UP);
         if (drift.compareTo(CLIENT_HINT_TOLERANCE) > 0) {
-            return new EthPriceQuote(quote.priceUsd(), quote.source(), quote.observedAt(), true);
+            return new EthPriceQuote(quote.priceUsd(), quote.source(), quote.observedAt(), true, quote.degraded());
         }
         return quote;
     }
@@ -73,14 +78,14 @@ public class EthPriceService {
 
         Optional<BigDecimal> chainlink = chainlinkReader.readPriceUsd();
         if (chainlink.isPresent()) {
-            EthPriceQuote quote = new EthPriceQuote(chainlink.get(), EthPriceSource.CHAINLINK, observedAt, false);
+            EthPriceQuote quote = new EthPriceQuote(chainlink.get(), EthPriceSource.CHAINLINK, observedAt, false, false);
             cache.put(quote, ttl);
             return quote;
         }
 
-        Optional<BigDecimal> publicApi = publicApiClient.fetchPriceUsd(properties.getPublicPriceApiUrl());
+        Optional<BigDecimal> publicApi = publicApiClient.fetchPriceUsd(resolvePublicPriceApiUrl());
         if (publicApi.isPresent()) {
-            EthPriceQuote quote = new EthPriceQuote(publicApi.get(), EthPriceSource.PUBLIC_API, observedAt, false);
+            EthPriceQuote quote = new EthPriceQuote(publicApi.get(), EthPriceSource.PUBLIC_API, observedAt, false, false);
             cache.put(quote, ttl);
             return quote;
         }
@@ -89,9 +94,18 @@ public class EthPriceService {
                 properties.getStaticEthPriceUsd(),
                 EthPriceSource.STATIC,
                 observedAt,
-                false
+                false,
+                true
         );
         cache.put(quote, ttl);
         return quote;
+    }
+
+    private String resolvePublicPriceApiUrl() {
+        String url = properties.getPublicPriceApiUrl();
+        if (!StringUtils.hasText(url)) {
+            url = environment.getProperty("PUBLIC_PRICE_API_URL");
+        }
+        return StringUtils.hasText(url) ? url.trim() : "";
     }
 }

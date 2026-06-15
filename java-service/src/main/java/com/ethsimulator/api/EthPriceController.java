@@ -23,10 +23,11 @@ public class EthPriceController {
                 quote.priceUsd().doubleValue(),
                 quote.source().name().toLowerCase(),
                 quote.observedAt().toString(),
-                quote.stale()
+                quote.stale(),
+                quote.degraded()
         );
     }
 
-    public record EthPriceResponse(double priceUsd, String source, String observedAt, boolean stale) {
+    public record EthPriceResponse(double priceUsd, String source, String observedAt, boolean stale, boolean degraded) {
     }
 }

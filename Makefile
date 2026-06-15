@@ -1,103 +1,165 @@
-.PHONY: help dev dev-build dev-logs down stop stop-host-ports reset-db db-apply db-verify java-build java-test java-run test sync-fixtures smoke curl-sim curl-price curl-chart
+# ETH Stablecoin Simulator — local development
+.DEFAULT_GOAL := help
 
-COMPOSE := docker compose
-export DATABASE_URL ?= postgresql://postgres:postgres@localhost:54329/ethsim
-JAVA_URL ?= http://localhost:8080
+SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
 
-help:
-	@echo "ETH Stablecoin Simulator — local dev"
+ROOT        := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+COMPOSE     := docker compose
+ENV_FILE    := .env
+RUN_DIR     := .run
+
+JAVA_DIR    := java-service
+AGENT_DIR   := python-agent
+WEB_DIR     := frontend
+
+JAVA_PORT   := 8080
+AGENT_PORT  := 8000
+WEB_PORT    := 3000
+PG_PORT     := 54329
+
+JAVA_URL    ?= http://localhost:$(JAVA_PORT)
+AGENT_URL   ?= http://localhost:$(AGENT_PORT)
+WEB_URL     ?= http://localhost:$(WEB_PORT)
+export DATABASE_URL ?= postgresql://postgres:postgres@localhost:$(PG_PORT)/ethsim
+
+# Load .env safely (handles & and ? in URLs — quote values in .env when unsure).
+WITH_ENV = source ./scripts/load-env.sh &&
+
+.PHONY: help all stop test status env deps sync-fixtures \
+        java-build java-test java-run \
+        agent-test agent-run python-test \
+        web-test web-run web-build frontend-test frontend-run \
+        db-up db-down db-apply db-verify db-reset \
+        smoke ci-smoke curl-price curl-sim curl-chart test-public-price test-price-fallback test-agent test-supabase setup-supabase-db \
+        dev dev-build dev-logs down
+
+help: ## Show available targets
+	@echo "ETH Stablecoin Simulator"
 	@echo ""
-	@echo "  make dev-build    Build Java image and start postgres + java-service"
-	@echo "  make dev          Start stack (no rebuild)"
-	@echo "  make dev-logs     Tail compose logs"
-	@echo "  make down         Stop Docker stack only"
-	@echo "  make stop         Stop Docker stack + host dev processes (8080/8000/3000)"
-	@echo "  make reset-db     Recreate postgres volume and re-apply schema"
-	@echo "  make db-apply     Apply WP-1 SQL to DATABASE_URL"
-	@echo "  make db-verify    Run WP-1 verification"
-	@echo "  make java-build   mvn package (skip tests)"
-	@echo "  make java-test    mvn test"
-	@echo "  make java-run     Run Spring Boot on host (port 8080)"
-	@echo "  make test         Alias for java-test"
-	@echo "  make sync-fixtures  Copy chart fixtures to java-service tests"
-	@echo "  make curl-sim     POST sample simulation to running java-service"
-	@echo "  make curl-price   GET /api/price/eth"
-	@echo "  make curl-chart   GET liquidation-band chart"
-	@echo "  make smoke        scripts/smoke-test.sh (needs agent+frontend later)"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_-]+:.*?## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-dev-build: java-build sync-fixtures
-	$(COMPOSE) up --build -d
-	@echo "Java API: $(JAVA_URL)/health"
-	@echo "Postgres: $(DATABASE_URL)"
+env: ## Create .env from .env.example when missing
+	@test -f $(ENV_FILE) || cp .env.example $(ENV_FILE)
 
-dev:
-	$(COMPOSE) up -d
+deps: env ## Install/build service dependencies (no tests)
+	@cd $(JAVA_DIR) && mvn -q package -DskipTests
+	@cd $(AGENT_DIR) && pip install -q -e ".[dev]"
+	@if [ ! -d $(WEB_DIR)/node_modules ]; then cd $(WEB_DIR) && npm ci; fi
 
-dev-logs:
-	$(COMPOSE) logs -f
+all: env ## Start Postgres + Java + agent + frontend (background)
+	@./scripts/dev-start.sh
 
-down:
-	$(COMPOSE) down
+stop: ## Stop Docker stack and all dev servers on 8080/8000/3000
+	@if ./scripts/dev-stop.sh; then echo "stop: OK"; else echo "stop: FAILED" >&2; exit 1; fi
 
-stop:
-	-$(COMPOSE) down
-	@$(MAKE) stop-host-ports
-	@echo "All local dev sessions stopped."
-
-# Kill host-run services from prior make java-run / agent / frontend sessions.
-stop-host-ports:
-	@for port in 8080 8000 3000; do \
-		pids=$$(lsof -ti:$$port 2>/dev/null || true); \
-		if [ -n "$$pids" ]; then \
-			echo "Stopping process(es) on port $$port: $$pids"; \
-			kill $$pids 2>/dev/null || true; \
+status: ## Show which dev ports are in use
+	@for port in $(JAVA_PORT) $(AGENT_PORT) $(WEB_PORT) $(PG_PORT); do \
+		if lsof -nP -iTCP:$$port -sTCP:LISTEN >/dev/null 2>&1; then \
+			echo "  $$port: listening"; \
+		else \
+			echo "  $$port: free"; \
 		fi; \
 	done
 
-reset-db: down
-	$(COMPOSE) down -v
-	$(MAKE) dev
+sync-fixtures: ## Copy chart fixtures into test directories
+	@./scripts/sync-fixtures.sh
+
+test: sync-fixtures ## Run Java, agent, and frontend test suites
+	@$(MAKE) java-test
+	@$(MAKE) agent-test
+	@$(MAKE) web-test
+	@echo "test: OK"
+
+java-build: ## Build Java service (skip tests)
+	@cd $(JAVA_DIR) && mvn -q package -DskipTests
+
+java-test: sync-fixtures ## Run Java unit/integration tests
+	@cd $(JAVA_DIR) && mvn -q test
+
+java-run: env sync-fixtures ## Run Java API on :$(JAVA_PORT) (foreground)
+	@$(WITH_ENV) cd $(JAVA_DIR) && mvn -q spring-boot:run
+
+agent-test: ## Run Python agent tests
+	@cd $(AGENT_DIR) && python -m pytest -q
+
+agent-run: env ## Run Python agent on :$(AGENT_PORT) (foreground)
+	@$(WITH_ENV) cd $(AGENT_DIR) && uvicorn app.main:app --reload --host 0.0.0.0 --port $(AGENT_PORT)
+
+web-test: ## Run frontend typecheck, vitest, and build
+	@cd $(WEB_DIR) && npm run typecheck && npm test && npm run build
+
+web-run: env ## Run Next.js dev server on :$(WEB_PORT) (foreground)
+	@$(WITH_ENV) cd $(WEB_DIR) && npm run dev -- --port $(WEB_PORT)
+
+web-build: ## Production frontend build only
+	@cd $(WEB_DIR) && npm run build
+
+python-test: agent-test ## Alias for agent-test
+frontend-test: web-test ## Alias for frontend-test
+frontend-run: web-run ## Alias for web-run
+
+db-up: ## Start Postgres container only
+	@$(COMPOSE) up -d postgres
+
+db-down: ## Stop Postgres container
+	@$(COMPOSE) stop postgres
+
+db-apply: ## Apply database schema
+	@./db/apply.sh "$(DATABASE_URL)"
+
+db-verify: ## Verify database schema
+	@./db/verify.sh "$(DATABASE_URL)"
+
+db-reset: stop db-up ## Recreate Postgres volume and re-apply schema
+	@$(COMPOSE) down -v
+	@$(COMPOSE) up -d postgres
 	@sleep 3
-	$(MAKE) db-apply
-	$(MAKE) db-verify
+	@$(MAKE) db-apply db-verify
 
-db-apply:
-	./db/apply.sh "$(DATABASE_URL)"
+dev-build: java-build sync-fixtures ## Docker: build Java image + start Postgres and Java
+	@$(COMPOSE) up --build -d
 
-db-verify:
-	./db/verify.sh "$(DATABASE_URL)"
+dev: ## Docker: start Postgres + Java (no rebuild)
+	@$(COMPOSE) up -d
 
-java-build:
-	cd java-service && mvn -q package -DskipTests
+dev-logs: ## Tail Docker compose logs
+	@$(COMPOSE) logs -f
 
-java-test: sync-fixtures
-	cd java-service && mvn test
+down: ## Stop Docker compose stack only
+	@$(COMPOSE) down
 
-java-run: sync-fixtures
-	cd java-service && mvn spring-boot:run
+smoke: ## End-to-end smoke test (services must be running)
+	@./scripts/smoke-test.sh "$(JAVA_URL)" "$(AGENT_URL)" "$(WEB_URL)"
 
-test: java-test
+ci-smoke: ## Full CI gate: tests + optional smoke when services are up
+	@./scripts/ci-smoke.sh
 
-sync-fixtures:
-	@mkdir -p java-service/src/test/resources/fixtures/charts
-	@if [ -d docs/fixtures/charts ]; then \
-		cp docs/fixtures/charts/*.json java-service/src/test/resources/fixtures/charts/; \
-		cp docs/fixtures/treasury-context-response.json java-service/src/test/resources/fixtures/; \
-		echo "fixtures synced"; \
-	else \
-		echo "docs/fixtures not found (gitignored planning) — using committed test fixtures"; \
-	fi
+curl-price: ## GET /api/price/eth
+	@curl -sS "$(JAVA_URL)/api/price/eth" | python3 -m json.tool
 
-curl-sim:
-	curl -sS -X POST "$(JAVA_URL)/api/simulations" \
+test-public-price: env ## Verify PUBLIC_PRICE_API_URL responds (Step 2 direct check)
+	@./scripts/test-public-price.sh
+
+test-price-fallback: env ## Verify Java uses public_api when ETH_RPC_URL is disabled
+	@./scripts/test-price-fallback.sh
+
+test-agent: env ## Verify agent health + endpoints (Step 3)
+	@./scripts/test-agent.sh
+
+test-supabase: env ## Verify Supabase URL/key and auth health (Step 5)
+	@chmod +x ./scripts/test-supabase.sh
+	@./scripts/test-supabase.sh
+
+setup-supabase-db: env ## Apply schema + RLS + grants to remote Supabase (needs DATABASE_URL or SUPABASE_DB_PASSWORD)
+	@chmod +x ./scripts/setup-supabase-db.sh
+	@./scripts/setup-supabase-db.sh
+
+curl-sim: ## POST sample simulation
+	@curl -sS -X POST "$(JAVA_URL)/api/simulations" \
 		-H "Content-Type: application/json" \
-		-d '{"collateralUsd":7600,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}' | python3 -m json.tool
+		-d '{"collateralUsd":7600,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}' \
+		| python3 -m json.tool
 
-curl-price:
-	curl -sS "$(JAVA_URL)/api/price/eth" | python3 -m json.tool
-
-curl-chart:
-	curl -sS "$(JAVA_URL)/api/charts/liquidation-band?ethAmount=2&protocol=maker_sky" | python3 -m json.tool
-
-smoke:
-	./scripts/smoke-test.sh "$(JAVA_URL)" "http://localhost:8000" "http://localhost:3000"
+curl-chart: ## GET liquidation-band chart
+	@curl -sS "$(JAVA_URL)/api/charts/liquidation-band?ethAmount=2&protocol=maker_sky" | python3 -m json.tool

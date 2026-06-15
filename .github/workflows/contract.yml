@@ -1,0 +1,52 @@
+name: API Contracts
+
+on:
+  pull_request:
+    paths:
+      - 'frontend/openapi/**'
+      - 'frontend/lib/generated/**'
+      - 'frontend/scripts/gen-types.sh'
+      - 'java-service/**'
+      - 'python-agent/**'
+      - '.github/workflows/contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/openapi/**'
+      - 'frontend/lib/generated/**'
+      - 'frontend/scripts/gen-types.sh'
+      - 'java-service/**'
+      - 'python-agent/**'
+      - '.github/workflows/contract.yml'
+
+jobs:
+  typegen-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Regenerate TypeScript types from OpenAPI snapshots
+        working-directory: frontend
+        run: npm run gen:types
+
+      - name: Fail on uncommitted generated type drift
+        run: |
+          git diff --exit-code frontend/lib/generated/ || {
+            echo "OpenAPI snapshot changed without regenerated types. Run: cd frontend && npm run gen:types"
+            exit 1
+          }
+
+      - name: Assert ChartSpecV1 in Java OpenAPI snapshot
+        run: |
+          grep -q 'ChartSpecV1\|chartId\|schemaVersion' frontend/openapi/java-api.json
