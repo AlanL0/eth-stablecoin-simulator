@@ -1,5 +1,6 @@
 package com.ethsimulator.market;
 
+import com.ethsimulator.protocol.RateConvention;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -22,6 +23,7 @@ class YieldServiceTest {
         assertEquals("USDC", response.asset());
         assertFalse(response.yields().isEmpty());
         assertEquals("seed", response.yields().get(0).source());
+        assertEquals(RateConvention.APR_EFFECTIVE, response.yields().get(0).convention());
     }
 
     @Test

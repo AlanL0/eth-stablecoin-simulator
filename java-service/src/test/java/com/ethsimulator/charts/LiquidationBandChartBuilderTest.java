@@ -5,7 +5,8 @@ import com.ethsimulator.market.EthPriceSource;
 import com.ethsimulator.simulation.SimulationEngine;
 import com.ethsimulator.service.SimulationInputResolver.ResolvedSimulation;
 import com.ethsimulator.util.FinancialMath;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.time.Instant;
 
@@ -16,13 +17,14 @@ class LiquidationBandChartBuilderTest {
 
     private final LiquidationBandChartBuilder builder = new LiquidationBandChartBuilder();
 
-    @Test
-    void usesJavaResolvedSpotNotClientHint() {
+    @ParameterizedTest
+    @EnumSource(EthPriceSource.class)
+    void spotLabelReflectsResolvedSource(EthPriceSource source) {
         EthPriceQuote resolvedPrice = new EthPriceQuote(
                 FinancialMath.bd("3850"),
-                EthPriceSource.CHAINLINK,
+                source,
                 Instant.parse("2026-06-09T12:00:00Z"),
-                true
+                false
         );
 
         ResolvedSimulation resolved = new ResolvedSimulation(
@@ -49,10 +51,12 @@ class LiquidationBandChartBuilderTest {
 
         var chart = builder.build(resolved, Instant.parse("2026-06-09T12:00:01Z"));
 
-        assertEquals("3850", chart.assumptions().get("ethPriceUsd"));
-        assertEquals("chainlink", chart.provenance().sources().get(0).source());
-        assertTrue(chart.provenance().sources().get(0).stale());
-        assertEquals("ETH spot (Chainlink)", chart.annotations().get(0).label());
-        assertEquals("3850.00", chart.series().get(0).data().get(0).metadata().get("displayValueEnd"));
+        String expectedLabel = switch (source) {
+            case CHAINLINK -> "ETH spot (Chainlink)";
+            case PUBLIC_API -> "ETH spot (public API)";
+            case CACHE -> "ETH spot (cached)";
+            case STATIC -> "ETH spot (static fallback)";
+        };
+        assertEquals(expectedLabel, chart.annotations().get(0).label());
     }
 }

@@ -1,6 +1,7 @@
 package com.ethsimulator.market;
 
 import com.ethsimulator.api.error.ApiException;
+import com.ethsimulator.protocol.RateConvention;
 import com.ethsimulator.simulation.RiskTier;
 import com.ethsimulator.util.FinancialMath;
 import org.springframework.http.HttpStatus;
@@ -19,20 +20,20 @@ public class YieldService {
 
     private static final Map<String, List<SeedYield>> SEED = Map.of(
             "USDC", List.of(
-                    new SeedYield("aave", FinancialMath.bd("4.2"), RiskTier.LOW),
-                    new SeedYield("compound", FinancialMath.bd("3.8"), RiskTier.LOW),
-                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RiskTier.MEDIUM)
+                    new SeedYield("aave", FinancialMath.bd("4.2"), RateConvention.APR_EFFECTIVE, RiskTier.LOW),
+                    new SeedYield("compound", FinancialMath.bd("3.8"), RateConvention.APR_EFFECTIVE, RiskTier.LOW),
+                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RateConvention.APR_EFFECTIVE, RiskTier.MEDIUM)
             ),
             "USDT", List.of(
-                    new SeedYield("aave", FinancialMath.bd("3.9"), RiskTier.LOW),
-                    new SeedYield("curve", FinancialMath.bd("4.1"), RiskTier.MEDIUM)
+                    new SeedYield("aave", FinancialMath.bd("3.9"), RateConvention.APR_EFFECTIVE, RiskTier.LOW),
+                    new SeedYield("curve", FinancialMath.bd("4.1"), RateConvention.APR_EFFECTIVE, RiskTier.MEDIUM)
             ),
             "DAI", List.of(
-                    new SeedYield("spark", FinancialMath.bd("4.5"), RiskTier.MEDIUM),
-                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RiskTier.MEDIUM)
+                    new SeedYield("spark", FinancialMath.bd("4.5"), RateConvention.APR_EFFECTIVE, RiskTier.MEDIUM),
+                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RateConvention.APR_EFFECTIVE, RiskTier.MEDIUM)
             ),
             "PYUSD", List.of(
-                    new SeedYield("aave", FinancialMath.bd("3.5"), RiskTier.LOW)
+                    new SeedYield("aave", FinancialMath.bd("3.5"), RateConvention.APR_EFFECTIVE, RiskTier.LOW)
             )
     );
 
@@ -55,6 +56,7 @@ public class YieldService {
                     .map(seed -> new YieldQuote(
                             seed.protocol(),
                             seed.apyPct(),
+                            seed.convention(),
                             "seed",
                             seed.riskTier(),
                             observedAt
@@ -66,6 +68,7 @@ public class YieldService {
                 new YieldQuote(
                         "static_conservative",
                         FinancialMath.bd("3.0"),
+                        RateConvention.APR_EFFECTIVE,
                         "static_fallback",
                         RiskTier.LOW,
                         observedAt
@@ -77,11 +80,17 @@ public class YieldService {
         Map<String, List<YieldQuote>> catalog = new LinkedHashMap<>();
         Instant observedAt = clock.instant();
         SEED.forEach((asset, yields) -> catalog.put(asset, yields.stream()
-                .map(seed -> new YieldQuote(seed.protocol(), seed.apyPct(), "seed", seed.riskTier(), observedAt))
+                .map(seed -> new YieldQuote(
+                        seed.protocol(),
+                        seed.apyPct(),
+                        seed.convention(),
+                        "seed",
+                        seed.riskTier(),
+                        observedAt))
                 .toList()));
         return catalog;
     }
 
-    private record SeedYield(String protocol, BigDecimal apyPct, RiskTier riskTier) {
+    private record SeedYield(String protocol, BigDecimal apyPct, RateConvention convention, RiskTier riskTier) {
     }
 }

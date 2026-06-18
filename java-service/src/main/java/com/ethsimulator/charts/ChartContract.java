@@ -98,7 +98,7 @@ public record ChartContract(
             Object x,
             @NotNull
             @JsonSerialize(using = PlotValueSerializer.class)
-            @Schema(description = "Server-rounded Y coordinate for plotting", implementation = Double.class, example = "216.02")
+            @Schema(description = "Server-rounded Y coordinate for plotting", implementation = BigDecimal.class, example = "216.02")
             BigDecimal plotValue,
             @NotBlank
             @Schema(description = "Exact authoritative decimal string for labels/tooltips", example = "216.02")
@@ -120,7 +120,7 @@ public record ChartContract(
             @Schema(allowableValues = {"solid", "dashed", "dotted"})
             String strokeDash,
             @JsonSerialize(using = PlotValueSerializer.class)
-            @Schema(description = "Fill opacity for area/band geometry", implementation = Double.class, example = "0.2")
+            @Schema(description = "Fill opacity for area/band geometry", implementation = BigDecimal.class, example = "0.2")
             BigDecimal fillOpacity
     ) {
     }
@@ -136,12 +136,12 @@ public record ChartContract(
             @Schema(allowableValues = {"x", "y"})
             String axis,
             @JsonSerialize(using = PlotValueSerializer.class)
-            @Schema(description = "Primary plot coordinate", implementation = Double.class)
+            @Schema(description = "Primary plot coordinate", implementation = BigDecimal.class)
             BigDecimal plotValue,
             @Schema(description = "Exact display string for primary coordinate")
             String displayValue,
             @JsonSerialize(using = PlotValueSerializer.class)
-            @Schema(description = "Secondary plot coordinate (band end)", implementation = Double.class)
+            @Schema(description = "Secondary plot coordinate (band end)", implementation = BigDecimal.class)
             BigDecimal plotValueEnd,
             @Schema(description = "Exact display string for secondary coordinate")
             String displayValueEnd,

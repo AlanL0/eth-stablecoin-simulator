@@ -64,9 +64,9 @@ class ChartFixtureGenerator {
         write("protocol-rates-comparison.json", ChartBuilders.protocolRatesComparison(
                 "USDC",
                 List.of(
-                        new YieldQuote("aave", FinancialMath.bd("4.2"), "seed", RiskTier.LOW, FIXTURE_TIME),
-                        new YieldQuote("compound", FinancialMath.bd("3.8"), "seed", RiskTier.LOW, FIXTURE_TIME),
-                        new YieldQuote("maker_dsr", FinancialMath.bd("5.0"), "seed", RiskTier.MEDIUM, FIXTURE_TIME)
+                        new YieldQuote("aave", FinancialMath.bd("4.2"), com.ethsimulator.protocol.RateConvention.APR_EFFECTIVE, "seed", RiskTier.LOW, FIXTURE_TIME),
+                        new YieldQuote("compound", FinancialMath.bd("3.8"), com.ethsimulator.protocol.RateConvention.APR_EFFECTIVE, "seed", RiskTier.LOW, FIXTURE_TIME),
+                        new YieldQuote("maker_dsr", FinancialMath.bd("5.0"), com.ethsimulator.protocol.RateConvention.APR_EFFECTIVE, "seed", RiskTier.MEDIUM, FIXTURE_TIME)
                 ),
                 FIXTURE_TIME
         ));

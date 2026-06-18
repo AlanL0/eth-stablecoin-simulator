@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 /** Presentation-only coordinate serialized as a bare JSON number. */
 @JsonSerialize(using = PlotNumberSerializer.class)
-@Schema(implementation = Double.class)
+@Schema(implementation = BigDecimal.class)
 record PlotNumber(BigDecimal value) {
 
     static PlotNumber of(BigDecimal value) {
