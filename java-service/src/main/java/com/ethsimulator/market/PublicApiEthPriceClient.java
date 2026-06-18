@@ -1,11 +1,10 @@
 package com.ethsimulator.market;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
+import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
@@ -17,10 +16,10 @@ public class PublicApiEthPriceClient {
 
     private static final Logger log = LoggerFactory.getLogger(PublicApiEthPriceClient.class);
 
-    private final RestTemplate restTemplate;
+    private final RestClient restClient;
 
-    public PublicApiEthPriceClient(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public PublicApiEthPriceClient(RestClient restClient) {
+        this.restClient = restClient;
     }
 
     public Optional<BigDecimal> fetchPriceUsd(String apiUrl) {
@@ -28,12 +27,15 @@ public class PublicApiEthPriceClient {
             return Optional.empty();
         }
         try {
-            JsonNode root = restTemplate.getForObject(apiUrl, JsonNode.class);
+            JsonNode root = restClient.get()
+                    .uri(apiUrl)
+                    .retrieve()
+                    .body(JsonNode.class);
             if (root == null) {
                 return Optional.empty();
             }
             return parsePrice(root);
-        } catch (RestClientException ex) {
+        } catch (RuntimeException ex) {
             log.warn("Public price API failed: {}", ex.getMessage());
             return Optional.empty();
         }
@@ -44,8 +46,7 @@ public class PublicApiEthPriceClient {
         if (ethereum.isNumber()) {
             return Optional.of(BigDecimal.valueOf(ethereum.asDouble()));
         }
-        // CoinGecko simple/price: { "ethereum": { "usd": N } } — any top-level coin id
-        Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
+        Iterator<Map.Entry<String, JsonNode>> fields = root.properties().iterator();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode usd = entry.getValue().path("usd");

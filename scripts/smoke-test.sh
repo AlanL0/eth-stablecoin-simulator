@@ -1,25 +1,22 @@
 #!/usr/bin/env bash
 # Production/local smoke test for ETH Stablecoin Simulator MVP.
-# Status: planning artifact — requires WP-10 services running.
 #
 # Usage:
-#   ./scripts/smoke-test.sh <JAVA_BASE> <AGENT_BASE> <FRONTEND_BASE>
+#   ./scripts/smoke-test.sh <JAVA_BASE> <FRONTEND_BASE>
 #
 # Example:
-#   ./scripts/smoke-test.sh http://localhost:8080 http://localhost:8000 http://localhost:3000
+#   ./scripts/smoke-test.sh http://localhost:8080 http://localhost:3000
 
 set -euo pipefail
 
 JAVA_BASE="${1:?java base url required}"
-AGENT_BASE="${2:?agent base url required}"
-FRONTEND_BASE="${3:?frontend base url required}"
+FRONTEND_BASE="${2:?frontend base url required}"
 
 strip_trailing_slash() {
   echo "${1%/}"
 }
 
 JAVA_BASE="$(strip_trailing_slash "$JAVA_BASE")"
-AGENT_BASE="$(strip_trailing_slash "$AGENT_BASE")"
 FRONTEND_BASE="$(strip_trailing_slash "$FRONTEND_BASE")"
 
 pass=0
@@ -61,7 +58,6 @@ check_post() {
 
 echo "Smoke test"
 echo "  Java:     $JAVA_BASE"
-echo "  Agent:    $AGENT_BASE"
 echo "  Frontend: $FRONTEND_BASE"
 echo
 
@@ -97,7 +93,7 @@ if command -v jq >/dev/null 2>&1; then
     echo "FAIL  java simulation charts (count=$charts_len, schemaVersion=$schema_ver)"
     fail=$((fail + 1))
   fi
-  if python3 -c "import sys; v=float(sys.argv[1]); sys.exit(0 if 3000 < v < 3300 else 1)" "$liq_price" 2>/dev/null; then
+  if awk -v v="$liq_price" 'BEGIN { exit !(v > 3000 && v < 3300) }'; then
     echo "PASS  java liquidation price sane ($liq_price)"
     pass=$((pass + 1))
   else
@@ -114,13 +110,11 @@ check "java health chart" \
 check "java wallet endpoint" "$JAVA_BASE/api/wallet/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/stablecoins"
 check "java audit endpoint" "$JAVA_BASE/api/audit/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
 
-check "agent health" "$AGENT_BASE/health"
-
 REC_BODY='{"simulationResult":{"healthRatio":1.2,"riskTier":"HIGH","stablecoinDebtUsd":4222.22},"message":"How risky is this?","riskPreference":"conservative"}'
-check_post "agent recommend-yield" "$AGENT_BASE/agent/recommend-yield" "$REC_BODY"
+check_post "agent recommend-yield" "$JAVA_BASE/agent/recommend-yield" "$REC_BODY"
 
 PARSE_BODY='{"message":"Show me bear and bull ETH scenarios as a chart","sessionId":"smoke-test"}'
-check_post "agent parse-goal" "$AGENT_BASE/agent/parse-goal" "$PARSE_BODY"
+check_post "agent parse-goal" "$JAVA_BASE/agent/parse-goal" "$PARSE_BODY"
 
 check "frontend home" "$FRONTEND_BASE/"
 

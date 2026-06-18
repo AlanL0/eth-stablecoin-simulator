@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-STOP_PORTS=(8080 8000 3000)
+STOP_PORTS=(8080 3000)
 FAILED=0
 
 stop_pid_file() {

@@ -22,5 +22,4 @@ if [[ ! -d "$SRC" ]] || ! compgen -G "$SRC/*.json" >/dev/null; then
 fi
 
 copy_tree "$SRC" "$ROOT/java-service/src/test/resources/fixtures/charts"
-copy_tree "$SRC" "$ROOT/python-agent/tests/fixtures/charts"
 copy_tree "$SRC" "$ROOT/frontend/test/fixtures/charts"

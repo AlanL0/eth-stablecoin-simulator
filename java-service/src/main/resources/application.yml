@@ -4,6 +4,32 @@ server:
 spring:
   application:
     name: java-service
+  threads:
+    virtual:
+      enabled: true
+  flyway:
+    enabled: ${FLYWAY_ENABLED:false}
+  ai:
+    openai:
+      api-key: ${LLM_API_KEY:}
+      base-url: ${LLM_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${MODEL_PRIMARY:gpt-4o-mini}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    db:
+      enabled: true
 
 eth-simulator:
   static-eth-price-usd: ${STATIC_ETH_PRICE_USD:3800}
@@ -21,3 +47,5 @@ eth-simulator:
   http-read-timeout-ms: 10000
   rpc-connect-timeout-ms: 5000
   rpc-read-timeout-ms: 30000
+  rpc-call-timeout-ms: 30000
+  blocking-io-max-concurrency: 64

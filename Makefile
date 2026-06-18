@@ -10,16 +10,13 @@ ENV_FILE    := .env
 RUN_DIR     := .run
 
 JAVA_DIR    := java-service
-AGENT_DIR   := python-agent
 WEB_DIR     := frontend
 
 JAVA_PORT   := 8080
-AGENT_PORT  := 8000
 WEB_PORT    := 3000
 PG_PORT     := 54329
 
 JAVA_URL    ?= http://localhost:$(JAVA_PORT)
-AGENT_URL   ?= http://localhost:$(AGENT_PORT)
 WEB_URL     ?= http://localhost:$(WEB_PORT)
 export DATABASE_URL ?= postgresql://postgres:postgres@localhost:$(PG_PORT)/ethsim
 
@@ -28,10 +25,9 @@ WITH_ENV = source ./scripts/load-env.sh &&
 
 .PHONY: help all stop test status env deps sync-fixtures \
         java-build java-test java-run \
-        agent-test agent-run python-test \
         web-test web-run web-build frontend-test frontend-run \
         db-up db-down db-apply db-verify db-reset \
-        smoke ci-smoke curl-price curl-sim curl-chart test-public-price test-price-fallback test-agent test-supabase setup-supabase-db \
+        smoke ci-smoke curl-price curl-sim curl-chart test-public-price test-price-fallback test-supabase setup-supabase-db \
         dev dev-build dev-logs down
 
 help: ## Show available targets
@@ -44,17 +40,16 @@ env: ## Create .env from .env.example when missing
 
 deps: env ## Install/build service dependencies (no tests)
 	@cd $(JAVA_DIR) && mvn -q package -DskipTests
-	@cd $(AGENT_DIR) && pip install -q -e ".[dev]"
 	@if [ ! -d $(WEB_DIR)/node_modules ]; then cd $(WEB_DIR) && npm ci; fi
 
-all: env ## Start Postgres + Java + agent + frontend (background)
+all: env ## Start Postgres + Java + frontend (background)
 	@./scripts/dev-start.sh
 
-stop: ## Stop Docker stack and all dev servers on 8080/8000/3000
+stop: ## Stop Docker stack and all dev servers on 8080/3000
 	@if ./scripts/dev-stop.sh; then echo "stop: OK"; else echo "stop: FAILED" >&2; exit 1; fi
 
 status: ## Show which dev ports are in use
-	@for port in $(JAVA_PORT) $(AGENT_PORT) $(WEB_PORT) $(PG_PORT); do \
+	@for port in $(JAVA_PORT) $(WEB_PORT) $(PG_PORT); do \
 		if lsof -nP -iTCP:$$port -sTCP:LISTEN >/dev/null 2>&1; then \
 			echo "  $$port: listening"; \
 		else \
@@ -65,9 +60,8 @@ status: ## Show which dev ports are in use
 sync-fixtures: ## Copy chart fixtures into test directories
 	@./scripts/sync-fixtures.sh
 
-test: sync-fixtures ## Run Java, agent, and frontend test suites
+test: sync-fixtures ## Run Java and frontend test suites
 	@$(MAKE) java-test
-	@$(MAKE) agent-test
 	@$(MAKE) web-test
 	@echo "test: OK"
 
@@ -80,12 +74,6 @@ java-test: sync-fixtures ## Run Java unit/integration tests
 java-run: env sync-fixtures ## Run Java API on :$(JAVA_PORT) (foreground)
 	@$(WITH_ENV) cd $(JAVA_DIR) && mvn -q spring-boot:run
 
-agent-test: ## Run Python agent tests
-	@cd $(AGENT_DIR) && python -m pytest -q
-
-agent-run: env ## Run Python agent on :$(AGENT_PORT) (foreground)
-	@$(WITH_ENV) cd $(AGENT_DIR) && uvicorn app.main:app --reload --host 0.0.0.0 --port $(AGENT_PORT)
-
 web-test: ## Run frontend typecheck, vitest, and build
 	@cd $(WEB_DIR) && npm run typecheck && npm test && npm run build
 
@@ -95,9 +83,8 @@ web-run: env ## Run Next.js dev server on :$(WEB_PORT) (foreground)
 web-build: ## Production frontend build only
 	@cd $(WEB_DIR) && npm run build
 
-python-test: agent-test ## Alias for agent-test
 frontend-test: web-test ## Alias for frontend-test
-frontend-run: web-run ## Alias for web-run
+frontend-run: web-run ## Alias for frontend-run
 
 db-up: ## Start Postgres container only
 	@$(COMPOSE) up -d postgres
@@ -130,22 +117,28 @@ down: ## Stop Docker compose stack only
 	@$(COMPOSE) down
 
 smoke: ## End-to-end smoke test (services must be running)
-	@./scripts/smoke-test.sh "$(JAVA_URL)" "$(AGENT_URL)" "$(WEB_URL)"
+	@./scripts/smoke-test.sh "$(JAVA_URL)" "$(WEB_URL)"
 
 ci-smoke: ## Full CI gate: tests + optional smoke when services are up
 	@./scripts/ci-smoke.sh
 
 curl-price: ## GET /api/price/eth
-	@curl -sS "$(JAVA_URL)/api/price/eth" | python3 -m json.tool
+	@curl -sS "$(JAVA_URL)/api/price/eth" | jq .
+
+curl-sim: ## POST sample simulation
+	@curl -sS -X POST "$(JAVA_URL)/api/simulations" \
+		-H "Content-Type: application/json" \
+		-d '{"collateralUsd":7600,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}' \
+		| jq .
+
+curl-chart: ## GET liquidation-band chart
+	@curl -sS "$(JAVA_URL)/api/charts/liquidation-band?ethAmount=2&protocol=maker_sky" | jq .
 
 test-public-price: env ## Verify PUBLIC_PRICE_API_URL responds (Step 2 direct check)
 	@./scripts/test-public-price.sh
 
 test-price-fallback: env ## Verify Java uses public_api when ETH_RPC_URL is disabled
 	@./scripts/test-price-fallback.sh
-
-test-agent: env ## Verify agent health + endpoints (Step 3)
-	@./scripts/test-agent.sh
 
 test-supabase: env ## Verify Supabase URL/key and auth health (Step 5)
 	@chmod +x ./scripts/test-supabase.sh
@@ -154,12 +147,3 @@ test-supabase: env ## Verify Supabase URL/key and auth health (Step 5)
 setup-supabase-db: env ## Apply schema + RLS + grants to remote Supabase (needs DATABASE_URL or SUPABASE_DB_PASSWORD)
 	@chmod +x ./scripts/setup-supabase-db.sh
 	@./scripts/setup-supabase-db.sh
-
-curl-sim: ## POST sample simulation
-	@curl -sS -X POST "$(JAVA_URL)/api/simulations" \
-		-H "Content-Type: application/json" \
-		-d '{"collateralUsd":7600,"protocol":"maker_sky","deployYieldPct":5,"years":1,"compoundsPerYear":12}' \
-		| python3 -m json.tool
-
-curl-chart: ## GET liquidation-band chart
-	@curl -sS "$(JAVA_URL)/api/charts/liquidation-band?ethAmount=2&protocol=maker_sky" | python3 -m json.tool

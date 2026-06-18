@@ -11,10 +11,9 @@ mkdir -p "$ROOT/lib/generated"
 
 if [[ "${REFRESH_OPENAPI:-}" == "1" ]]; then
   JAVA_URL="${JAVA_API_URL:-http://localhost:8080}/v3/api-docs"
-  AGENT_URL="${AGENT_API_URL:-http://localhost:8000}/openapi.json"
-  echo "Refreshing OpenAPI snapshots from live services..."
+  echo "Refreshing OpenAPI snapshots from live Java service..."
   curl -fsSL "$JAVA_URL" -o "$JAVA_SNAPSHOT"
-  curl -fsSL "$AGENT_URL" -o "$AGENT_SNAPSHOT"
+  # Agent contract is maintained as a committed snapshot until ETH-T22 publishes a dedicated group.
 fi
 
 if [[ ! -f "$JAVA_SNAPSHOT" || ! -f "$AGENT_SNAPSHOT" ]]; then

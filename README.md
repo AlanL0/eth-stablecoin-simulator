@@ -29,7 +29,7 @@ The simulator is a **sandbox with labelled assumptions**. It is not a compliance
 | **Risk & charts** | Health ratio, risk tier, ChartSpecV1 JSON (yield projection, liquidation band, health sweep) |
 | **Treasury panel** | Free educational context: T-bill backing proxy, issuer reserve yield vs your DeFi yield |
 | **Market data** | ETH price chain: cache → Chainlink (web3j) → public API → static fallback — always source-labelled |
-| **AI layer** *(planned)* | Python agent explains results and calls Java tools; never owns the math |
+| **AI layer** *(planned)* | Spring AI in Java explains results and calls tools; never owns the math |
 | **Wallet & audit** *(planned)* | Allowlisted stablecoin balances and lite CSV/JSON export |
 
 **Free forever:** liquidation band, health sweep, basic yield projection, Treasury education panel, and full AI (infra rate limits only). Advanced multi-scenario charts may be gated later; safety primitives stay free.
@@ -40,8 +40,7 @@ The simulator is a **sandbox with labelled assumptions**. It is not a compliance
 
 ```text
 frontend/       Next.js — renders ChartSpecV1; no finance math
-java-service/   Spring Boot + web3j — simulation, charts, chain reads (single source of truth)
-python-agent/   FastAPI — NL explain + Java tool calls only
+java-service/   Spring Boot 4 + web3j — simulation, charts, chain reads, Spring AI (single source of truth)
 db/             Postgres schema (profiles, simulations, feedback backlog, …)
 ```
 
@@ -78,7 +77,7 @@ db/             Postgres schema (profiles, simulations, feedback backlog, …)
 | WP-2 Java core simulator | Done |
 | WP-3 Market data + chart APIs | Done |
 | WP-4 Wallet + audit lite | Done |
-| WP-5 Python agent core | Done |
+| WP-5 Agent core (Java Spring AI) | In progress (ETH-T22) |
 | WP-6 API contracts + typegen | Done |
 | WP-7 Frontend MVP | Done |
 | WP-8 Auth + saved state | Done |
@@ -89,6 +88,7 @@ db/             Postgres schema (profiles, simulations, feedback backlog, …)
 **Implemented Java API (today)**
 
 - `GET /health`
+- `GET /actuator/health` (degraded RPC/DB/LLM when unconfigured)
 - `GET /api/price/eth`
 - `GET /api/yields?asset=USDC`
 - `POST /api/simulations`
@@ -97,13 +97,13 @@ db/             Postgres schema (profiles, simulations, feedback backlog, …)
 - `GET /api/charts/health-ratio`
 - `GET /api/wallet/{address}/stablecoins`
 - `GET /api/audit/{address}` (+ CSV/JSON export)
-- Python: `GET /health`, `POST /agent/recommend-yield`, `POST /agent/parse-goal`, `POST /agent/summarize-audit`
+- Agent (Java stub): `POST /agent/recommend-yield`, `POST /agent/parse-goal`, `POST /agent/summarize-audit`
 
 ---
 
 ## Quick start
 
-**Prerequisites:** Java 21, Maven 3.9+, Python 3.11+, Node 22+, Docker (optional).
+**Prerequisites:** Java 25, Maven 3.9+, Node 24+, Docker (optional).
 
 ```bash
 git clone https://github.com/AlanL0/eth-stablecoin-simulator.git
@@ -111,9 +111,9 @@ cd eth-stablecoin-simulator
 cp .env.example .env   # fill ETH_RPC_URL etc. locally; never commit .env
 
 make stop              # stop: OK
-make all               # Postgres + Java + agent + frontend (background)
+make all               # Postgres + Java + frontend (background)
 make curl-price        # ETH price + source
-make test              # Java + agent + frontend test suites
+make test              # Java + frontend test suites
 make smoke             # end-to-end smoke (after make all)
 ```
 
@@ -121,7 +121,6 @@ Foreground (one service per terminal):
 
 ```bash
 make java-run          # http://localhost:8080
-make agent-run         # http://localhost:8000
 make web-run           # http://localhost:3000
 ```
 
@@ -153,6 +152,7 @@ Copy `.env.example` — never commit secrets.
 | `STATIC_ETH_PRICE_USD` | Last-resort price (default `3800`) |
 | `DATABASE_URL` | Postgres for schema apply / future persistence |
 | `ALLOWED_ORIGINS` | CORS for local frontend |
+| `LLM_API_KEY` | Optional Spring AI credentials (ETH-T22+) |
 
 ---
 
@@ -160,8 +160,7 @@ Copy `.env.example` — never commit secrets.
 
 ```text
 frontend/         Next.js (scaffold)
-java-service/     Spring Boot simulator + charts + market data
-python-agent/       FastAPI agent (scaffold)
+java-service/     Spring Boot 4 simulator + charts + market data + agent stub
 db/               Versioned SQL + apply/verify scripts
 scripts/          Smoke test, fixture sync
 ```

@@ -27,7 +27,6 @@ export class ApiError extends Error {
 }
 
 const JAVA_BASE = process.env.NEXT_PUBLIC_JAVA_API_URL ?? "http://localhost:8080";
-const AGENT_BASE = process.env.NEXT_PUBLIC_AGENT_API_URL ?? "http://localhost:8000";
 
 type FetchConfig = {
   baseUrl?: string;
@@ -35,7 +34,6 @@ type FetchConfig = {
 };
 
 let javaBaseUrl = JAVA_BASE;
-let agentBaseUrl = AGENT_BASE;
 let fetchImpl: typeof fetch = fetch;
 
 export function configureApiClient(config: FetchConfig = {}): void {
@@ -47,18 +45,13 @@ export function configureApiClient(config: FetchConfig = {}): void {
   }
 }
 
+/** Agent endpoints are served by the Java service (Spring AI stub until ETH-T22). */
 export function configureAgentClient(config: FetchConfig = {}): void {
-  if (config.baseUrl) {
-    agentBaseUrl = config.baseUrl;
-  }
-  if (config.fetchImpl) {
-    fetchImpl = config.fetchImpl;
-  }
+  configureApiClient(config);
 }
 
 export function resetApiClientForTests(): void {
   javaBaseUrl = JAVA_BASE;
-  agentBaseUrl = AGENT_BASE;
   fetchImpl = fetch;
 }
 
@@ -135,7 +128,7 @@ export async function getAudit(address: string, query: AuditQuery = {}): Promise
 export async function recommendYield(
   body: RecommendYieldRequest,
 ): Promise<RecommendYieldResponse> {
-  return requestJson<RecommendYieldResponse>(agentBaseUrl, "/agent/recommend-yield", {
+  return requestJson<RecommendYieldResponse>(javaBaseUrl, "/agent/recommend-yield", {
     method: "POST",
     body: JSON.stringify(body),
   });
@@ -144,7 +137,7 @@ export async function recommendYield(
 export async function summarizeAudit(
   body: SummarizeAuditRequest,
 ): Promise<SummarizeAuditResponse> {
-  return requestJson<SummarizeAuditResponse>(agentBaseUrl, "/agent/summarize-audit", {
+  return requestJson<SummarizeAuditResponse>(javaBaseUrl, "/agent/summarize-audit", {
     method: "POST",
     body: JSON.stringify(body),
   });

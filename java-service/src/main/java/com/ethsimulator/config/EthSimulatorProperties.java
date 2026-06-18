@@ -23,6 +23,8 @@ public class EthSimulatorProperties {
     private int httpReadTimeoutMs = 10_000;
     private int rpcConnectTimeoutMs = 5_000;
     private int rpcReadTimeoutMs = 30_000;
+    private int rpcCallTimeoutMs = 30_000;
+    private int blockingIoMaxConcurrency = 64;
 
     public BigDecimal getStaticEthPriceUsd() {
         return staticEthPriceUsd;
@@ -142,5 +144,21 @@ public class EthSimulatorProperties {
 
     public void setRpcReadTimeoutMs(int rpcReadTimeoutMs) {
         this.rpcReadTimeoutMs = rpcReadTimeoutMs;
+    }
+
+    public int getRpcCallTimeoutMs() {
+        return rpcCallTimeoutMs;
+    }
+
+    public void setRpcCallTimeoutMs(int rpcCallTimeoutMs) {
+        this.rpcCallTimeoutMs = rpcCallTimeoutMs;
+    }
+
+    public int getBlockingIoMaxConcurrency() {
+        return blockingIoMaxConcurrency;
+    }
+
+    public void setBlockingIoMaxConcurrency(int blockingIoMaxConcurrency) {
+        this.blockingIoMaxConcurrency = blockingIoMaxConcurrency;
     }
 }

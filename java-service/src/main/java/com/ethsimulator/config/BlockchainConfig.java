@@ -9,14 +9,15 @@ import com.ethsimulator.blockchain.UnavailableTransferEventFetcher;
 import com.ethsimulator.blockchain.Web3jChainlinkEthUsdReader;
 import com.ethsimulator.blockchain.Web3jErc20BalanceReader;
 import com.ethsimulator.blockchain.Web3jTransferEventFetcher;
+import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
-import okhttp3.OkHttpClient;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.protocol.websocket.WebSocketService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +30,25 @@ public class BlockchainConfig {
         if (!StringUtils.hasText(rpcUrl)) {
             return null;
         }
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(properties.getRpcConnectTimeoutMs(), TimeUnit.MILLISECONDS)
-                .readTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
-                .writeTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
-                .build();
-        return Web3j.build(new HttpService(rpcUrl.trim(), client));
+        String trimmed = rpcUrl.trim();
+        if (trimmed.startsWith("ws://") || trimmed.startsWith("wss://")) {
+            return null;
+        }
+        OkHttpClient client = rpcHttpClient(properties);
+        return Web3j.build(new HttpService(trimmed, client));
+    }
+
+    @Bean
+    public WebSocketService webSocketService(Environment environment, EthSimulatorProperties properties) {
+        String rpcUrl = resolveRpcUrl(environment);
+        if (!StringUtils.hasText(rpcUrl)) {
+            return null;
+        }
+        String trimmed = rpcUrl.trim();
+        if (!trimmed.startsWith("ws://") && !trimmed.startsWith("wss://")) {
+            return null;
+        }
+        return new WebSocketService(trimmed, false);
     }
 
     @Bean
@@ -74,11 +88,20 @@ public class BlockchainConfig {
         return new UnavailableTransferEventFetcher();
     }
 
-    static String resolveRpcUrl(Environment environment) {
+    public static String resolveRpcUrl(Environment environment) {
         String rpcUrl = environment.getProperty("eth-simulator.eth-rpc-url");
         if (!StringUtils.hasText(rpcUrl)) {
             rpcUrl = environment.getProperty("ETH_RPC_URL");
         }
         return rpcUrl;
+    }
+
+    private static OkHttpClient rpcHttpClient(EthSimulatorProperties properties) {
+        return new OkHttpClient.Builder()
+                .connectTimeout(properties.getRpcConnectTimeoutMs(), TimeUnit.MILLISECONDS)
+                .readTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
+                .writeTimeout(properties.getRpcReadTimeoutMs(), TimeUnit.MILLISECONDS)
+                .callTimeout(properties.getRpcCallTimeoutMs(), TimeUnit.MILLISECONDS)
+                .build();
     }
 }

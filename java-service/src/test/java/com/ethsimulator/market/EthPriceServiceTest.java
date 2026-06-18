@@ -5,7 +5,8 @@ import com.ethsimulator.config.EthSimulatorProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.env.Environment;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
 
 import static org.mockito.Mockito.mock;
 
@@ -103,7 +104,7 @@ class EthPriceServiceTest {
         EthPriceService service = new EthPriceService(
                 properties,
                 chainlinkReturning("3850.00"),
-                new PublicApiEthPriceClient(new RestTemplate()),
+                new PublicApiEthPriceClient(RestClient.builder().requestFactory(new SimpleClientHttpRequestFactory()).build()),
                 new EthPriceCache(clock),
                 clock,
                 mock(Environment.class)
@@ -133,7 +134,7 @@ class EthPriceServiceTest {
         return new EthPriceService(
                 properties,
                 chainlinkReader,
-                new PublicApiEthPriceClient(new RestTemplate()),
+                new PublicApiEthPriceClient(RestClient.builder().requestFactory(new SimpleClientHttpRequestFactory()).build()),
                 cache,
                 FIXED_CLOCK,
                 mock(Environment.class)
