@@ -8,7 +8,6 @@ import com.ethsimulator.protocol.liquity.LiquityAdapter;
 import com.ethsimulator.protocol.rpc.EthCallClient;
 import com.ethsimulator.protocol.sky.SkyAdapter;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,26 +22,21 @@ import java.util.List;
 public class ProtocolAdapterConfig {
 
     @Bean
-    @ConditionalOnBean(Web3j.class)
-    public EthCallClient ethCallClient(Web3j web3j) {
-        return new EthCallClient(web3j);
-    }
-
-    @Bean
     public List<ProtocolAdapter> protocolAdapters(
             ProtocolSourcesProperties properties,
             EthSimulatorProperties ethSimulatorProperties,
-            ObjectProvider<EthCallClient> ethCallClientProvider,
+            ObjectProvider<Web3j> web3jProvider,
             Clock clock
     ) {
         if (!StringUtils.hasText(properties.getChainlink().getAddress())) {
             properties.getChainlink().setAddress(ethSimulatorProperties.getChainlinkEthUsdFeed());
         }
 
-        EthCallClient ethCallClient = ethCallClientProvider.getIfAvailable();
-        if (ethCallClient == null) {
+        Web3j web3j = web3jProvider.getIfAvailable();
+        if (web3j == null) {
             return List.of();
         }
+        EthCallClient ethCallClient = new EthCallClient(web3j);
 
         return List.of(
                 new ChainlinkAdapter(properties, ethCallClient, clock),
