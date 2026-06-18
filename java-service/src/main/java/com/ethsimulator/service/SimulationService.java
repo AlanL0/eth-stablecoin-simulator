@@ -5,7 +5,7 @@ import com.ethsimulator.api.dto.SimulationResponse;
 import com.ethsimulator.api.dto.SimulationResponse.Assumptions;
 import com.ethsimulator.api.error.ApiException;
 import com.ethsimulator.charts.ChartBuilders;
-import com.ethsimulator.charts.ChartModels.ChartSpec;
+import com.ethsimulator.charts.ChartContract;
 import com.ethsimulator.charts.LiquidationBandChartBuilder;
 import com.ethsimulator.service.SimulationInputResolver.ResolvedSimulation;
 import com.ethsimulator.treasury.StablecoinReserveModel;
@@ -44,7 +44,7 @@ public class SimulationService {
         ResolvedSimulation resolved = simulationInputResolver.resolve(request);
         Instant generatedAt = clock.instant();
 
-        List<ChartSpec> charts = new ArrayList<>();
+        List<ChartContract> charts = new ArrayList<>();
         charts.add(ChartBuilders.yieldProjection(
                 resolved.protocol(),
                 resolved.result().stablecoinDebtUsd(),

@@ -1,0 +1,80 @@
+{
+  "schemaVersion" : "2.0",
+  "chartId" : "eth_price_history",
+  "title" : "ETH/USD Price History",
+  "description" : "Deterministic seed history for educational context — not a live market data feed.",
+  "xAxis" : {
+    "type" : "time",
+    "label" : "Observation time",
+    "format" : "iso8601"
+  },
+  "yAxis" : {
+    "type" : "linear",
+    "label" : "USD per ETH",
+    "unit" : "usd",
+    "format" : "usd",
+    "domain" : [ 3521.45, 3850.13 ]
+  },
+  "series" : [ {
+    "id" : "eth_spot",
+    "label" : "ETH spot (USD)",
+    "unit" : "usd",
+    "style" : {
+      "geometry" : "line",
+      "colorToken" : "primary"
+    },
+    "data" : [ {
+      "x" : "2026-06-01T00:00:00Z",
+      "plotValue" : 3521.45,
+      "displayValue" : "3521.445678901234567890"
+    }, {
+      "x" : "2026-06-02T00:00:00Z",
+      "plotValue" : 3610.12,
+      "displayValue" : "3610.12"
+    }, {
+      "x" : "2026-06-03T00:00:00Z",
+      "plotValue" : 3688.99,
+      "displayValue" : "3688.99"
+    }, {
+      "x" : "2026-06-04T00:00:00Z",
+      "plotValue" : 3722.50,
+      "displayValue" : "3722.50"
+    }, {
+      "x" : "2026-06-05T00:00:00Z",
+      "plotValue" : 3795.33,
+      "displayValue" : "3795.333333333333333333"
+    }, {
+      "x" : "2026-06-06T00:00:00Z",
+      "plotValue" : 3812.00,
+      "displayValue" : "3812.00"
+    }, {
+      "x" : "2026-06-07T00:00:00Z",
+      "plotValue" : 3770.88,
+      "displayValue" : "3770.88"
+    }, {
+      "x" : "2026-06-08T00:00:00Z",
+      "plotValue" : 3800.00,
+      "displayValue" : "3800.00"
+    }, {
+      "x" : "2026-06-09T00:00:00Z",
+      "plotValue" : 3850.13,
+      "displayValue" : "3850.125"
+    } ]
+  } ],
+  "annotations" : [ ],
+  "assumptions" : {
+    "chartType" : "line"
+  },
+  "warnings" : [ ],
+  "provenance" : {
+    "builder" : "java-service/eth-price-history-builder",
+    "generatedAt" : "2026-06-09T12:00:01Z",
+    "methodology" : "seed_history_v1",
+    "sources" : [ {
+      "field" : "ethPriceUsd",
+      "source" : "seed_history",
+      "observedAt" : "2026-06-09T12:00:01Z",
+      "stale" : false
+    } ]
+  }
+}

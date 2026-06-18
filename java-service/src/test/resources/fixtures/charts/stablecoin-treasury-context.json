@@ -1,63 +1,75 @@
 {
-  "schemaVersion": "1.0",
-  "chartId": "stablecoin_treasury_context",
-  "chartType": "composed",
-  "title": "Stablecoin Reserves & Treasury Context (Educational)",
-  "subtitle": "Your mint vs illustrative issuer reserve economics — not official fiscal data. At ~$32B supply → ~$1.30B/yr issuer yield at assumptions.",
-  "xAxis": {
-    "type": "category",
-    "label": "Your simulation (USD)",
-    "format": "usd"
+  "schemaVersion" : "2.0",
+  "chartId" : "stablecoin_treasury_context",
+  "title" : "Stablecoin Reserves & Treasury Context (Educational)",
+  "description" : "Your mint vs illustrative issuer reserve economics — not official fiscal data.",
+  "xAxis" : {
+    "type" : "category",
+    "label" : "Your simulation (USD)",
+    "format" : "usd"
   },
-  "yAxis": {
-    "type": "linear",
-    "label": "USD",
-    "unit": "usd",
-    "format": "usd"
+  "yAxis" : {
+    "type" : "linear",
+    "label" : "USD",
+    "unit" : "usd",
+    "format" : "usd"
   },
-  "series": [
-    {
-      "id": "treasury_backing",
-      "name": "Implied T-bill backing (your mint)",
-      "geometry": "bar",
-      "points": [{ "x": "your_mint", "y": 3800.0 }],
-      "style": { "colorToken": "secondary" }
+  "series" : [ {
+    "id" : "treasury_backing",
+    "label" : "Implied T-bill backing (your mint)",
+    "unit" : "usd",
+    "style" : {
+      "geometry" : "bar",
+      "colorToken" : "secondary"
     },
-    {
-      "id": "issuer_yield",
-      "name": "Issuer reserve yield (annual)",
-      "geometry": "bar",
-      "points": [{ "x": "your_mint", "y": 171.0 }],
-      "style": { "colorToken": "positive" }
+    "data" : [ {
+      "x" : "your_mint",
+      "plotValue" : 3800.00,
+      "displayValue" : "3800.00"
+    } ]
+  }, {
+    "id" : "issuer_yield",
+    "label" : "Issuer reserve yield (annual)",
+    "unit" : "usd",
+    "style" : {
+      "geometry" : "bar",
+      "colorToken" : "positive"
     },
-    {
-      "id": "your_defi_yield",
-      "name": "Your DeFi net yield (annual)",
-      "geometry": "bar",
-      "points": [{ "x": "your_mint", "y": 4.91 }],
-      "style": { "colorToken": "primary" }
-    }
-  ],
-  "annotations": [],
-  "legend": { "position": "bottom", "show": true },
-  "meta": {
-    "protocol": "maker_sky",
-    "stablecoinDebtUsd": 4222.22,
-    "sources": [
-      {
-        "field": "tbillApyPct",
-        "source": "model_assumption",
-        "observedAt": "2026-06-09T12:00:00Z",
-        "stale": false
-      },
-      {
-        "field": "systemSupplyUsd",
-        "source": "static_seed",
-        "observedAt": "2026-06-09T12:00:00Z",
-        "stale": false
-      }
-    ]
+    "data" : [ {
+      "x" : "your_mint",
+      "plotValue" : 171.00,
+      "displayValue" : "171.00"
+    } ]
+  }, {
+    "id" : "your_defi_yield",
+    "label" : "Deployed capital net return (annualized)",
+    "unit" : "usd",
+    "style" : {
+      "geometry" : "bar",
+      "colorToken" : "primary"
+    },
+    "data" : [ {
+      "x" : "your_mint",
+      "plotValue" : 4.91,
+      "displayValue" : "4.91"
+    } ]
+  } ],
+  "annotations" : [ ],
+  "assumptions" : {
+    "chartType" : "composed",
+    "protocol" : "maker_sky",
+    "stablecoinDebtUsd" : "4222.22"
   },
-  "source": "java-service/treasury-context-builder",
-  "generatedAt": "2026-06-09T12:00:01Z"
+  "warnings" : [ ],
+  "provenance" : {
+    "builder" : "java-service/treasury-context-builder",
+    "generatedAt" : "2026-06-09T12:00:01Z",
+    "methodology" : "treasury_reserve_model_v1",
+    "sources" : [ {
+      "field" : "tbillApyPct",
+      "source" : "model_assumption",
+      "observedAt" : "2026-06-09T12:00:01Z",
+      "stale" : false
+    } ]
+  }
 }

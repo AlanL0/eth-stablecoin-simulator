@@ -49,10 +49,10 @@ class LiquidationBandChartBuilderTest {
 
         var chart = builder.build(resolved, Instant.parse("2026-06-09T12:00:01Z"));
 
-        assertEquals(FinancialMath.bd("3850"), chart.meta().ethPriceUsd());
-        assertEquals("chainlink", chart.meta().sources().get(0).source());
-        assertTrue(chart.meta().sources().get(0).stale());
+        assertEquals("3850", chart.assumptions().get("ethPriceUsd"));
+        assertEquals("chainlink", chart.provenance().sources().get(0).source());
+        assertTrue(chart.provenance().sources().get(0).stale());
         assertEquals("ETH spot (Chainlink)", chart.annotations().get(0).label());
-        assertEquals(FinancialMath.bd("3850.00"), chart.series().get(0).points().get(0).y1());
+        assertEquals("3850.00", chart.series().get(0).data().get(0).metadata().get("displayValueEnd"));
     }
 }

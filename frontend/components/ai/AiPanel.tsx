@@ -1,7 +1,7 @@
 "use client";
 
 import { ChartSpecRenderer } from "@/components/charts/ChartSpecRenderer";
-import type { ChartSpecV1, RecommendYieldResponse, SimulationResponse } from "@/lib/api";
+import type { ChartContract, RecommendYieldResponse, SimulationResponse } from "@/lib/api";
 import { recommendYield } from "@/lib/api";
 import { useState } from "react";
 
@@ -34,7 +34,7 @@ export function AiPanel({ simulationResult }: AiPanelProps) {
   };
 
   const escalated = response?.feedback?.some((entry) => entry.backlogEscalated) ?? false;
-  const chartSpecs = (response?.chartSpecs ?? []) as ChartSpecV1[];
+  const chartSpecs = (response?.chartSpecs ?? []) as ChartContract[];
 
   return (
     <section

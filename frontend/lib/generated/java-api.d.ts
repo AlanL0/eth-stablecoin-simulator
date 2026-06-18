@@ -4,6 +4,70 @@
  */
 
 export interface paths {
+    "/api/simulations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["simulate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/summarize-audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["summarizeAudit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/recommend-yield": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendYield"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/agent/parse-goal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["parseGoal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -20,16 +84,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/simulations": {
+    "/api/yields": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["yields"];
         put?: never;
-        post: operations["runSimulation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/wallet/{address}/stablecoins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["stablecoins"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -43,23 +123,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getEthPrice"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/yields": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["getYields"];
+        get: operations["ethPrice"];
         put?: never;
         post?: never;
         delete?: never;
@@ -75,7 +139,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Yield projection chart */
         get: operations["chartSimulationProjection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/charts/protocol-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Protocol return comparison chart */
+        get: operations["chartProtocolRates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -91,6 +173,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Collateral recovery threshold band chart */
         get: operations["chartLiquidationBand"];
         put?: never;
         post?: never;
@@ -107,6 +190,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Collateralization risk margin sweep chart */
         get: operations["chartHealthRatio"];
         put?: never;
         post?: never;
@@ -116,14 +200,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/wallet/{address}/stablecoins": {
+    "/api/charts/eth-price-history": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getWalletStablecoins"];
+        /** ETH/USD price history chart */
+        get: operations["chartEthPriceHistory"];
         put?: never;
         post?: never;
         delete?: never;
@@ -139,7 +224,39 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getAudit"];
+        get: operations["audit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit/{address}/export.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportJson"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit/{address}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["exportCsv"];
         put?: never;
         post?: never;
         delete?: never;
@@ -152,15 +269,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        HealthResponse: {
-            status?: string;
-            service?: string;
-        };
-        ErrorResponse: {
-            code?: string;
-            message?: string;
-            details?: string[];
-        };
         SimulationRequest: {
             ethAmount?: number;
             collateralUsd?: number;
@@ -169,38 +277,18 @@ export interface components {
             targetCollateralRatio?: number;
             liquidationRatio?: number;
             stabilityFeePct?: number;
-            /** @default 5 */
             deployYieldPct: number;
-            /** @default 1 */
-            years: number;
-            /** @default 12 */
-            compoundsPerYear: number;
-            /** @default true */
-            treasuryContextEnabled: boolean;
-            /** @default usdc_style */
-            stablecoinReserveModel: string;
+            /** Format: int32 */
+            years?: number;
+            /** Format: int32 */
+            compoundsPerYear?: number;
+            treasuryContextEnabled?: boolean;
+            stablecoinReserveModel?: string;
             reserveInTreasuriesPct?: number;
             tbillApyPct?: number;
             systemSupplyUsd?: number;
         };
-        SimulationResponse: {
-            /** Format: uuid */
-            id?: string;
-            collateralValueUsd: number;
-            stablecoinDebtUsd: number;
-            liquidationPriceUsd: number;
-            annualStabilityFeeUsd?: number;
-            projectedGrossYieldUsd?: number;
-            projectedNetYieldUsd?: number;
-            healthRatio: number;
-            /** @enum {string} */
-            riskTier: "LOW" | "MEDIUM" | "HIGH";
-            warnings?: string[];
-            assumptions: components["schemas"]["SimulationAssumptions"];
-            treasuryContext?: components["schemas"]["TreasuryContext"];
-            charts: components["schemas"]["ChartSpecV1"][];
-        };
-        SimulationAssumptions: {
+        Assumptions: {
             protocol?: string;
             ethAmount?: number;
             ethPriceUsd?: number;
@@ -209,9 +297,290 @@ export interface components {
             liquidationRatio?: number;
             stabilityFeePct?: number;
             deployYieldPct?: number;
+            /** Format: int32 */
             years?: number;
+            /** Format: int32 */
             compoundsPerYear?: number;
             stabilityFeeModel?: string;
+        };
+        /** @default null */
+        ChartAnnotation: {
+            id: string;
+            /**
+             * @default
+             * @enum {string}
+             */
+            kind: "horizontal_line" | "vertical_line" | "band" | "point" | "label";
+            /**
+             * @default
+             * @enum {string}
+             */
+            axis: "x" | "y";
+            /**
+             * Format: double
+             * @description Primary plot coordinate
+             * @default
+             */
+            plotValue: number;
+            /**
+             * @description Exact display string for primary coordinate
+             * @default
+             */
+            displayValue: string;
+            /**
+             * Format: double
+             * @description Secondary plot coordinate (band end)
+             * @default
+             */
+            plotValueEnd: number;
+            /**
+             * @description Exact display string for secondary coordinate
+             * @default
+             */
+            displayValueEnd: string;
+            label?: string;
+            /**
+             * @default
+             * @enum {string}
+             */
+            severity: "info" | "low" | "medium" | "high";
+        };
+        /** @default null */
+        ChartAxis: {
+            /**
+             * @default
+             * @enum {string}
+             */
+            type: "linear" | "time" | "category";
+            label: string;
+            /**
+             * @description Axis unit token
+             * @default
+             * @example usd
+             */
+            unit: string;
+            /**
+             * @description Display format token
+             * @default
+             * @example usd
+             */
+            format: string;
+            /**
+             * @description Plot domain [min, max] as JSON numbers
+             * @default
+             */
+            domain: number[];
+            /**
+             * Format: int32
+             * @description Suggested tick count
+             * @default
+             */
+            tickCount: number;
+        };
+        /**
+         * @description ChartContract v2 — Java-owned chart payload for Recharts rendering
+         * @default null
+         */
+        ChartContract: {
+            /**
+             * @description Contract schema version
+             * @default
+             * @example 2.0
+             * @enum {string}
+             */
+            schemaVersion: "2.0";
+            /**
+             * @description Stable chart identifier
+             * @default
+             * @example simulation_yield_projection
+             */
+            chartId: string;
+            /**
+             * @description Human-readable chart title
+             * @default
+             */
+            title: string;
+            /**
+             * @description Optional chart description / subtitle
+             * @default
+             */
+            description: string;
+            /**
+             * @description X-axis definition
+             * @default
+             */
+            xAxis: components["schemas"]["ChartAxis"];
+            /**
+             * @description Y-axis definition
+             * @default
+             */
+            yAxis: components["schemas"]["ChartAxis"];
+            /**
+             * @description Renderable series
+             * @default
+             */
+            series: components["schemas"]["ChartSeries"][];
+            /**
+             * @description Reference lines, bands, and markers
+             * @default
+             */
+            annotations: components["schemas"]["ChartAnnotation"][];
+            /**
+             * @description Model inputs and context as exact decimal strings where applicable
+             * @default
+             */
+            assumptions: {
+                [key: string]: string;
+            };
+            /**
+             * @description Non-fatal chart warnings (stale data, degraded sources)
+             * @default
+             */
+            warnings: string[];
+            /**
+             * @description Builder identity, timestamps, and data provenance
+             * @default
+             */
+            provenance: components["schemas"]["ChartProvenance"];
+        };
+        /** @default null */
+        ChartProvenance: {
+            /**
+             * @description Builder identifier
+             * @default
+             * @example java-service/simulation-chart-builder
+             */
+            builder: string;
+            /**
+             * Format: date-time
+             * @description ISO-8601 generation timestamp
+             * @default
+             */
+            generatedAt: string;
+            /**
+             * @description Methodology or model identifier
+             * @default
+             */
+            methodology: string;
+            sources: components["schemas"]["ChartSource"][];
+        };
+        /** @default null */
+        ChartSeries: {
+            id: string;
+            /**
+             * @description TradFi display label for the series
+             * @default
+             */
+            label: string;
+            /**
+             * @description Series unit token
+             * @default
+             * @example usd
+             */
+            unit: string;
+            style?: components["schemas"]["ChartSeriesStyle"];
+            data: components["schemas"]["DataPoint"][];
+        };
+        /** @default null */
+        ChartSeriesStyle: {
+            /**
+             * @default
+             * @enum {string}
+             */
+            geometry: "line" | "area" | "band" | "bar";
+            /**
+             * @default
+             * @enum {string}
+             */
+            colorToken: "primary" | "secondary" | "positive" | "negative" | "warning" | "neutral";
+            /**
+             * @default
+             * @enum {string}
+             */
+            strokeDash: "solid" | "dashed" | "dotted";
+            /**
+             * Format: double
+             * @description Fill opacity for area/band geometry
+             * @default
+             * @example 0.2
+             */
+            fillOpacity: number;
+        };
+        /** @default null */
+        ChartSource: {
+            field: string;
+            source: string;
+            observedAt: string;
+            stale?: boolean;
+        };
+        /** @default null */
+        DataPoint: {
+            /**
+             * @description X coordinate (category label, month index, timestamp token, etc.)
+             * @default
+             */
+            x: unknown;
+            /**
+             * Format: double
+             * @description Server-rounded Y coordinate for plotting
+             * @default
+             * @example 216.02
+             */
+            plotValue: number;
+            /**
+             * @description Exact authoritative decimal string for labels/tooltips
+             * @default
+             * @example 216.02
+             */
+            displayValue: string;
+            /**
+             * @description Optional point label
+             * @default
+             */
+            label: string;
+            /**
+             * @description Band upper bounds and auxiliary presentation metadata
+             * @default
+             */
+            metadata: {
+                [key: string]: unknown;
+            };
+        };
+        MintContext: {
+            impliedTreasuryBackingUsd?: number;
+            annualIssuerReserveYieldUsd?: number;
+            projectedIssuerReserveYieldUsd?: number;
+        };
+        PersonalComparison: {
+            yourDeFiProjectedNetYieldUsd?: number;
+            note?: string;
+        };
+        /** @default null */
+        SimulationResponse: {
+            /** Format: uuid */
+            id?: string;
+            collateralValueUsd?: number;
+            stablecoinDebtUsd?: number;
+            liquidationPriceUsd?: number;
+            annualStabilityFeeUsd?: number;
+            projectedGrossYieldUsd?: number;
+            projectedNetYieldUsd?: number;
+            healthRatio?: number;
+            /** @enum {string} */
+            riskTier?: "LOW" | "MEDIUM" | "HIGH";
+            warnings?: string[];
+            assumptions?: components["schemas"]["Assumptions"];
+            treasuryContext?: components["schemas"]["TreasuryContext"];
+            /**
+             * @description ChartContract v2 payloads
+             * @default
+             */
+            charts: components["schemas"]["ChartContract"][];
+        };
+        SystemContext: {
+            impliedTreasuryBackingUsd?: number;
+            annualIssuerReserveYieldUsd?: number;
+            treasuryDemandProxyUsd?: number;
         };
         TreasuryContext: {
             disclaimer?: string;
@@ -219,131 +588,96 @@ export interface components {
             assumptions?: {
                 [key: string]: unknown;
             };
-            yourMint?: {
-                impliedTreasuryBackingUsd?: number;
-                annualIssuerReserveYieldUsd?: number;
-                projectedIssuerReserveYieldUsd?: number;
+            yourMint?: components["schemas"]["MintContext"];
+            systemContext?: components["schemas"]["SystemContext"];
+            personalComparison?: components["schemas"]["PersonalComparison"];
+        };
+        SummarizeAuditRequest: {
+            events?: {
+                [key: string]: unknown;
+            }[];
+            hideValues?: boolean;
+        };
+        SummarizeAuditResponse: {
+            summary?: string;
+            notablePatterns?: string[];
+            risks?: string[];
+            assumptions?: string[];
+            model?: string;
+            fallbackUsed?: boolean;
+        };
+        RecommendYieldRequest: {
+            simulationResult: {
+                [key: string]: unknown;
             };
-            systemContext?: {
-                impliedTreasuryBackingUsd?: number;
-                annualIssuerReserveYieldUsd?: number;
-                treasuryDemandProxyUsd?: number;
-            };
-            personalComparison?: {
-                yourDeFiProjectedNetYieldUsd?: number;
-                note?: string;
+            availableYields?: {
+                [key: string]: unknown;
+            }[];
+            riskPreference?: string;
+            message?: string;
+            sessionId?: string;
+        };
+        RecommendYieldResponse: {
+            summary?: string;
+            recommendations?: string[];
+            risks?: string[];
+            assumptions?: string[];
+            toolsUsed?: {
+                [key: string]: unknown;
+            }[];
+            chartSpecs?: {
+                [key: string]: unknown;
+            }[];
+            feedback?: {
+                [key: string]: unknown;
+            }[];
+            model?: string;
+            fallbackUsed?: boolean;
+        };
+        ParseGoalRequest: {
+            message: string;
+            sessionId?: string;
+            simulationResult?: {
+                [key: string]: unknown;
             };
         };
-        EthPriceResponse: {
-            priceUsd?: number;
-            source?: string;
-            observedAt?: string;
-            stale?: boolean;
-            degraded?: boolean;
-        };
-        YieldSnapshotResponse: {
-            asset?: string;
-            yields?: components["schemas"]["YieldQuote"][];
+        ParseGoalResponse: {
+            intent?: string;
+            entities?: {
+                [key: string]: unknown;
+            };
+            suggestedAction?: string;
+            confidence?: number;
+            toolsUsed?: {
+                [key: string]: unknown;
+            }[];
+            chartSpecs?: {
+                [key: string]: unknown;
+            }[];
+            feedback?: {
+                [key: string]: unknown;
+            }[];
         };
         YieldQuote: {
             protocol?: string;
             apyPct?: number;
             source?: string;
-            riskTier?: string;
+            /** @enum {string} */
+            riskTier?: "LOW" | "MEDIUM" | "HIGH";
+            /** Format: date-time */
             observedAt?: string;
         };
-        ChartQueryParams: {
-            ethAmount?: number;
-            ethPriceUsd?: number;
-            protocol?: string;
-            targetCollateralRatio?: number;
-            liquidationRatio?: number;
-            stabilityFeePct?: number;
-            deployYieldPct?: number;
-            years?: number;
-            compoundsPerYear?: number;
+        YieldSnapshotResponse: {
+            asset?: string;
+            yields?: components["schemas"]["YieldQuote"][];
         };
-        ChartSpecV1: {
-            /** @enum {string} */
-            schemaVersion: "1.0";
-            chartId: string;
-            /** @enum {string} */
-            chartType: "line" | "area" | "band" | "bar" | "composed";
-            title: string;
-            subtitle?: string;
-            xAxis: components["schemas"]["ChartAxis"];
-            yAxis: components["schemas"]["ChartAxis"];
-            series: components["schemas"]["ChartSeries"][];
-            annotations?: components["schemas"]["ChartAnnotation"][];
-            legend?: components["schemas"]["ChartLegend"];
-            meta?: components["schemas"]["ChartMeta"];
-            source: string;
-            /** Format: date-time */
-            generatedAt: string;
-        };
-        ChartAxis: {
-            /** @enum {string} */
-            type: "linear" | "time" | "category";
-            label: string;
-            unit?: string;
-            /** @enum {string} */
-            format?: "number" | "usd" | "percent" | "eth" | "month_index";
-            domain?: number[];
-            tickCount?: number;
-        };
-        ChartSeries: {
-            id: string;
-            name: string;
-            /** @enum {string} */
-            geometry: "line" | "area" | "band" | "bar";
-            points: components["schemas"]["ChartPoint"][];
-            style?: components["schemas"]["ChartSeriesStyle"];
-        };
-        ChartPoint: {
-            x: unknown;
-            y?: number;
-            y0?: number;
-            y1?: number;
-            label?: string;
-        };
-        ChartSeriesStyle: {
-            /** @enum {string} */
-            colorToken?: "primary" | "secondary" | "positive" | "negative" | "warning" | "neutral";
-            /** @enum {string} */
-            strokeDash?: "solid" | "dashed" | "dotted";
-            fillOpacity?: number;
-        };
-        ChartAnnotation: {
-            id: string;
-            /** @enum {string} */
-            kind: "horizontal_line" | "vertical_line" | "band" | "point" | "label";
-            /** @enum {string} */
-            axis?: "x" | "y";
-            value?: unknown;
-            valueEnd?: unknown;
-            label?: string;
-            /** @enum {string} */
-            severity?: "info" | "low" | "medium" | "high";
-        };
-        ChartLegend: {
-            /** @enum {string} */
-            position?: "top" | "bottom" | "right" | "hidden";
-            show?: boolean;
-        };
-        ChartMeta: {
-            /** Format: uuid */
-            simulationId?: string;
-            protocol?: string;
-            ethPriceUsd?: number;
-            ethAmount?: number;
-            stablecoinDebtUsd?: number;
-            sources?: components["schemas"]["ChartSource"][];
-        };
-        ChartSource: {
-            field: string;
-            source: string;
-            observedAt: string;
-            stale?: boolean;
+        StablecoinBalance: {
+            symbol?: string;
+            contractAddress?: string;
+            /** Format: int32 */
+            decimals?: number;
+            balance?: string;
+            balanceUsd?: number;
         };
         WalletStablecoinsResponse: {
             address?: string;
@@ -352,22 +686,31 @@ export interface components {
             observedAt?: string;
             assumptions?: string[];
         };
-        StablecoinBalance: {
-            symbol?: string;
-            contractAddress?: string;
-            decimals?: number;
-            balance?: string;
-            balanceUsd?: number;
+        EthPriceResponse: {
+            priceUsd?: number;
+            source?: string;
+            observedAt?: string;
+            stale?: boolean;
+            degraded?: boolean;
         };
-        AuditResponse: {
-            address?: string;
-            events?: components["schemas"]["AuditEvent"][];
-            hideValues?: boolean;
-            assumptions?: string[];
+        ChartQueryParams: {
+            ethAmount?: number;
+            collateralUsd?: number;
+            protocol: string;
+            targetCollateralRatio?: number;
+            liquidationRatio?: number;
+            stabilityFeePct?: number;
+            deployYieldPct: number;
+            /** Format: int32 */
+            years?: number;
+            /** Format: int32 */
+            compoundsPerYear?: number;
+            ethPriceUsd?: number;
         };
         AuditEvent: {
             token?: string;
             txHash?: string;
+            /** Format: int32 */
             logIndex?: number;
             fromAddress?: string;
             toAddress?: string;
@@ -376,17 +719,117 @@ export interface components {
             blockNumber?: number;
             occurredAt?: string;
         };
+        AuditResponse: {
+            address?: string;
+            events?: components["schemas"]["AuditEvent"][];
+            hideValues?: boolean;
+            assumptions?: string[];
+        };
     };
     responses: never;
-    parameters: {
-        ChartQueryParams: components["schemas"]["ChartQueryParams"];
-    };
+    parameters: never;
     requestBodies: never;
     headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    simulate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SimulationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SimulationResponse"];
+                };
+            };
+        };
+    };
+    summarizeAudit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SummarizeAuditRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SummarizeAuditResponse"];
+                };
+            };
+        };
+    };
+    recommendYield: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecommendYieldRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecommendYieldResponse"];
+                };
+            };
+        };
+    };
+    parseGoal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParseGoalRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParseGoalResponse"];
+                };
+            };
+        };
+    };
     health: {
         parameters: {
             query?: never;
@@ -402,65 +845,14 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthResponse"];
+                    "*/*": {
+                        [key: string]: string;
+                    };
                 };
             };
         };
     };
-    runSimulation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SimulationRequest"];
-            };
-        };
-        responses: {
-            /** @description Simulation result */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimulationResponse"];
-                };
-            };
-            /** @description Validation error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getEthPrice: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description ETH price quote */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EthPriceResponse"];
-                };
-            };
-        };
-    };
-    getYields: {
+    yields: {
         parameters: {
             query: {
                 asset: string;
@@ -471,84 +863,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Yield snapshots */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["YieldSnapshotResponse"];
+                    "*/*": components["schemas"]["YieldSnapshotResponse"];
                 };
             };
         };
     };
-    chartSimulationProjection: {
-        parameters: {
-            query?: {
-                chartQuery?: components["parameters"]["ChartQueryParams"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Chart spec */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChartSpecV1"];
-                };
-            };
-        };
-    };
-    chartLiquidationBand: {
-        parameters: {
-            query?: {
-                chartQuery?: components["parameters"]["ChartQueryParams"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Chart spec */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChartSpecV1"];
-                };
-            };
-        };
-    };
-    chartHealthRatio: {
-        parameters: {
-            query?: {
-                chartQuery?: components["parameters"]["ChartQueryParams"];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Chart spec */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ChartSpecV1"];
-                };
-            };
-        };
-    };
-    getWalletStablecoins: {
+    stablecoins: {
         parameters: {
             query?: never;
             header?: never;
@@ -559,27 +885,146 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Stablecoin balances */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WalletStablecoinsResponse"];
-                };
-            };
-            /** @description Invalid address */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "*/*": components["schemas"]["WalletStablecoinsResponse"];
                 };
             };
         };
     };
-    getAudit: {
+    ethPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EthPriceResponse"];
+                };
+            };
+        };
+    };
+    chartSimulationProjection: {
+        parameters: {
+            query: {
+                params: components["schemas"]["ChartQueryParams"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ChartContract v2 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChartContract"];
+                };
+            };
+        };
+    };
+    chartProtocolRates: {
+        parameters: {
+            query: {
+                asset: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ChartContract v2 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChartContract"];
+                };
+            };
+        };
+    };
+    chartLiquidationBand: {
+        parameters: {
+            query: {
+                params: components["schemas"]["ChartQueryParams"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ChartContract v2 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChartContract"];
+                };
+            };
+        };
+    };
+    chartHealthRatio: {
+        parameters: {
+            query: {
+                params: components["schemas"]["ChartQueryParams"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ChartContract v2 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChartContract"];
+                };
+            };
+        };
+    };
+    chartEthPriceHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ChartContract v2 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ChartContract"];
+                };
+            };
+        };
+    };
+    audit: {
         parameters: {
             query?: {
                 from?: string;
@@ -595,22 +1040,67 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Audit events */
+            /** @description OK */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AuditResponse"];
+                    "*/*": components["schemas"]["AuditResponse"];
                 };
             };
-            /** @description Invalid address */
-            400: {
+        };
+    };
+    exportJson: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                token?: string;
+                hideValues?: boolean;
+            };
+            header?: never;
+            path: {
+                address: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "*/*": components["schemas"]["AuditResponse"];
+                };
+            };
+        };
+    };
+    exportCsv: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                token?: string;
+                hideValues?: boolean;
+            };
+            header?: never;
+            path: {
+                address: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
                 };
             };
         };

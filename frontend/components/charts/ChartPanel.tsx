@@ -1,13 +1,13 @@
-import type { ChartSpecV1 } from "@/lib/api";
+import type { ChartContract } from "@/lib/api";
 import type { ReactNode } from "react";
 
 type ChartPanelProps = {
-  spec: ChartSpecV1;
+  spec: ChartContract;
   children: ReactNode;
 };
 
 export function ChartPanel({ spec, children }: ChartPanelProps) {
-  const sourceSummary = spec.meta?.sources?.[0];
+  const sourceSummary = spec.provenance?.sources?.[0];
   return (
     <section
       className="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
@@ -15,8 +15,15 @@ export function ChartPanel({ spec, children }: ChartPanelProps) {
     >
       <header className="mb-3">
         <h3 className="text-lg font-semibold text-slate-100">{spec.title}</h3>
-        {spec.subtitle ? (
-          <p className="mt-1 text-sm text-slate-400">{spec.subtitle}</p>
+        {spec.description ? (
+          <p className="mt-1 text-sm text-slate-400">{spec.description}</p>
+        ) : null}
+        {spec.warnings?.length ? (
+          <ul className="mt-2 text-xs text-amber-400">
+            {spec.warnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
         ) : null}
       </header>
       <div className="h-72 w-full">{children}</div>
@@ -26,7 +33,7 @@ export function ChartPanel({ spec, children }: ChartPanelProps) {
             Source: {sourceSummary.source} ({sourceSummary.field}) ·{" "}
           </span>
         ) : null}
-        <span>Generated {spec.generatedAt}</span>
+        <span>Generated {spec.provenance?.generatedAt}</span>
       </footer>
     </section>
   );

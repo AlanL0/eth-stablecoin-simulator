@@ -78,8 +78,9 @@ class SimulationControllerTest {
                 .andExpect(jsonPath("$.treasuryContext.yourMint.impliedTreasuryBackingUsd", is("3800.00")))
                 .andExpect(jsonPath("$.treasuryContext.yourMint.annualIssuerReserveYieldUsd", is("171.00")))
                 .andExpect(jsonPath("$.charts", hasSize(4)))
+                .andExpect(jsonPath("$.charts[0].schemaVersion", is("2.0")))
                 .andExpect(jsonPath("$.charts[0].chartId", is("simulation_yield_projection")))
-                .andExpect(jsonPath("$.charts[0].generatedAt", notNullValue()))
+                .andExpect(jsonPath("$.charts[0].provenance.generatedAt", notNullValue()))
                 .andExpect(jsonPath("$.charts[1].chartId", is("liquidation_price_band")))
                 .andExpect(jsonPath("$.charts[2].chartId", is("health_ratio_sweep")))
                 .andExpect(jsonPath("$.charts[3].chartId", is("stablecoin_treasury_context")));

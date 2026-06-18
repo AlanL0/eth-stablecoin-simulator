@@ -29,9 +29,9 @@ class ChartBuildersTest {
         );
 
         assertEquals("simulation_yield_projection", chart.chartId());
-        assertEquals(3, chart.series().get(0).points().size());
-        assertEquals(FIXTURE_TIME.toString(), chart.generatedAt());
-        assertEquals("static", chart.meta().sources().get(0).source());
+        assertEquals(3, chart.series().get(0).data().size());
+        assertEquals(FIXTURE_TIME.toString(), chart.provenance().generatedAt());
+        assertEquals("static", chart.provenance().sources().get(0).source());
     }
 
     @Test
@@ -54,9 +54,9 @@ class ChartBuildersTest {
         var fees = chart.series().stream().filter(s -> "cumulative_fees".equals(s.id())).findFirst().orElseThrow();
         var net = chart.series().stream().filter(s -> "net_yield".equals(s.id())).findFirst().orElseThrow();
 
-        assertEquals(FinancialMath.bd("216.02"), gross.points().get(2).y());
-        assertEquals(FinancialMath.bd("211.11"), fees.points().get(2).y());
-        assertEquals(FinancialMath.bd("4.91"), net.points().get(2).y());
+        assertEquals("216.02", gross.data().get(2).displayValue());
+        assertEquals("211.11", fees.data().get(2).displayValue());
+        assertEquals("4.91", net.data().get(2).displayValue());
     }
 
     @Test
@@ -73,8 +73,9 @@ class ChartBuildersTest {
                 FIXTURE_TIME);
 
         assertEquals("liquidation_price_band", chart.chartId());
-        assertNotNull(chart.series().get(0).points().get(0).y0());
-        assertEquals(FinancialMath.bd("3800.00"), chart.series().get(0).points().get(0).y1());
+        assertNotNull(chart.series().get(0).data().get(0).metadata().get("displayValueEnd"));
+        assertEquals(FinancialMath.scaleUsd(FinancialMath.bd("3800")).toPlainString(),
+                chart.series().get(0).data().get(0).metadata().get("displayValueEnd"));
     }
 
     @Test
@@ -90,7 +91,7 @@ class ChartBuildersTest {
                 FIXTURE_TIME
         );
 
-        assertEquals(5, chart.series().get(0).points().size());
-        assertEquals(FinancialMath.bd("1.2"), chart.series().get(0).points().get(2).y());
+        assertEquals(5, chart.series().get(0).data().size());
+        assertEquals("1.2", chart.series().get(0).data().get(2).displayValue());
     }
 }

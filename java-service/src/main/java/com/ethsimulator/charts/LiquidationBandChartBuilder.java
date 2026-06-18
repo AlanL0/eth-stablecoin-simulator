@@ -10,7 +10,7 @@ import java.time.Instant;
 @Component
 public class LiquidationBandChartBuilder {
 
-    public ChartModels.ChartSpec build(ResolvedSimulation resolved, Instant generatedAt) {
+    public ChartContract build(ResolvedSimulation resolved, Instant generatedAt) {
         EthPriceQuote price = resolved.ethPrice();
         String spotLabel = spotLabel(price);
         return ChartBuilders.liquidationBand(

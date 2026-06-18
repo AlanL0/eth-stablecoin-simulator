@@ -14,22 +14,38 @@ const mockResult: SimulationResponse = {
   assumptions: { protocol: "maker_sky" },
   charts: [
     {
-      schemaVersion: "1.0",
+      schemaVersion: "2.0",
       chartId: "liquidation_price_band",
-      chartType: "band",
-      title: "ETH Spot vs Liquidation Price",
-      xAxis: { type: "category", label: "Price marker" },
-      yAxis: { type: "linear", label: "USD per ETH", format: "usd" },
+      title: "ETH Spot vs Collateral Recovery Threshold",
+      description: "",
+      xAxis: { type: "category", label: "Price marker", unit: "", format: "usd", domain: [], tickCount: 0 },
+      yAxis: { type: "linear", label: "USD per ETH", unit: "usd", format: "usd", domain: [], tickCount: 0 },
       series: [
         {
           id: "safe_band",
-          name: "Collateral buffer",
-          geometry: "band",
-          points: [{ x: "range", y0: 3166.67, y1: 3800 }],
+          label: "Collateral buffer",
+          unit: "usd",
+          style: { geometry: "band", colorToken: "positive", strokeDash: "solid", fillOpacity: 0.15 },
+          data: [
+            {
+              x: "range",
+              plotValue: 3166.67,
+              displayValue: "3166.67",
+              label: "",
+              metadata: { plotValueEnd: 3800, displayValueEnd: "3800.00", geometry: "band" },
+            },
+          ],
         },
       ],
-      source: "test",
-      generatedAt: "2026-06-09T12:00:01Z",
+      annotations: [],
+      assumptions: { chartType: "band", protocol: "maker_sky" },
+      warnings: [],
+      provenance: {
+        builder: "test",
+        generatedAt: "2026-06-09T12:00:01Z",
+        methodology: "",
+        sources: [{ field: "ethPriceUsd", source: "chainlink", observedAt: "2026-06-09T12:00:01Z", stale: false }],
+      },
     },
   ],
 };

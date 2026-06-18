@@ -1,44 +1,33 @@
-# OpenAPI 3.0 components stub — ChartSpecV1
-# Merge into Spring Boot springdoc output during WP-2/WP-6.
-# Source of truth for field names: docs/chart-spec-schema.md
+# OpenAPI 3.0 components — ChartContract v2 (ETH-T18)
+# Merged into springdoc /v3/api-docs output. See docs/CHART_CONTRACT_V2_MIGRATION.md
 
 openapi: 3.0.3
 info:
   title: ETH Stablecoin Simulator — Chart Components
-  version: 1.0.0-draft
+  version: 2.0.0
 paths: {}
 
 components:
   schemas:
-    ChartSpecV1:
+    ChartContract:
       type: object
       required:
         - schemaVersion
         - chartId
-        - chartType
         - title
         - xAxis
         - yAxis
         - series
-        - source
-        - generatedAt
+        - provenance
       properties:
         schemaVersion:
           type: string
-          enum: ["1.0"]
+          enum: ["2.0"]
         chartId:
           type: string
-          enum:
-            - simulation_yield_projection
-            - liquidation_price_band
-            - health_ratio_sweep
-            - stablecoin_treasury_context
-        chartType:
-          type: string
-          enum: [line, area, band, bar, composed]
         title:
           type: string
-        subtitle:
+        description:
           type: string
         xAxis:
           $ref: '#/components/schemas/ChartAxis'
@@ -53,16 +42,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChartAnnotation'
-        legend:
-          $ref: '#/components/schemas/ChartLegend'
-        meta:
-          $ref: '#/components/schemas/ChartMeta'
-        source:
-          type: string
-          example: java-service/simulation-chart-builder
-        generatedAt:
-          type: string
-          format: date-time
+        assumptions:
+          type: object
+          additionalProperties:
+            type: string
+        warnings:
+          type: array
+          items:
+            type: string
+        provenance:
+          $ref: '#/components/schemas/ChartProvenance'
 
     ChartAxis:
       type: object
@@ -77,53 +66,54 @@ components:
           type: string
         format:
           type: string
-          enum: [number, usd, percent, eth, month_index]
         domain:
           type: array
           minItems: 2
           maxItems: 2
           items:
-            type: string
+            type: number
         tickCount:
           type: integer
-          minimum: 2
 
     ChartSeries:
       type: object
-      required: [id, name, geometry, points]
+      required: [id, label, unit, data]
       properties:
         id:
           type: string
-        name:
+        label:
           type: string
-        geometry:
+        unit:
           type: string
-          enum: [line, area, band, bar]
-        points:
+        style:
+          $ref: '#/components/schemas/ChartSeriesStyle'
+        data:
           type: array
           minItems: 1
           items:
-            $ref: '#/components/schemas/ChartPoint'
-        style:
-          $ref: '#/components/schemas/ChartSeriesStyle'
+            $ref: '#/components/schemas/DataPoint'
 
-    ChartPoint:
+    DataPoint:
       type: object
-      required: [x]
+      required: [x, plotValue, displayValue]
       properties:
         x: {}
-        y:
-          type: string
-        y0:
-          type: string
-        y1:
+        plotValue:
+          type: number
+        displayValue:
           type: string
         label:
           type: string
+        metadata:
+          type: object
+          additionalProperties: true
 
     ChartSeriesStyle:
       type: object
       properties:
+        geometry:
+          type: string
+          enum: [line, area, band, bar]
         colorToken:
           type: string
           enum: [primary, secondary, positive, negative, warning, neutral]
@@ -131,7 +121,7 @@ components:
           type: string
           enum: [solid, dashed, dotted]
         fillOpacity:
-          type: string
+          type: number
 
     ChartAnnotation:
       type: object
@@ -145,36 +135,30 @@ components:
         axis:
           type: string
           enum: [x, y]
-        value: {}
-        valueEnd: {}
+        plotValue:
+          type: number
+        displayValue:
+          type: string
+        plotValueEnd:
+          type: number
+        displayValueEnd:
+          type: string
         label:
           type: string
         severity:
           type: string
           enum: [info, low, medium, high]
 
-    ChartLegend:
+    ChartProvenance:
       type: object
+      required: [builder, generatedAt, sources]
       properties:
-        position:
+        builder:
           type: string
-          enum: [top, bottom, right, hidden]
-        show:
-          type: boolean
-
-    ChartMeta:
-      type: object
-      properties:
-        simulationId:
+        generatedAt:
           type: string
-          format: uuid
-        protocol:
-          type: string
-        ethPriceUsd:
-          type: string
-        ethAmount:
-          type: string
-        stablecoinDebtUsd:
+          format: date-time
+        methodology:
           type: string
         sources:
           type: array
@@ -197,56 +181,8 @@ components:
 
     SimulationResponse:
       type: object
-      required:
-        - collateralValueUsd
-        - stablecoinDebtUsd
-        - liquidationPriceUsd
-        - healthRatio
-        - riskTier
-        - assumptions
-        - charts
       properties:
-        id:
-          type: string
-          format: uuid
-        collateralValueUsd:
-          type: string
-        stablecoinDebtUsd:
-          type: string
-        liquidationPriceUsd:
-          type: string
-        annualStabilityFeeUsd:
-          type: string
-        projectedGrossYieldUsd:
-          type: string
-        projectedNetYieldUsd:
-          type: string
-        healthRatio:
-          type: string
-        riskTier:
-          type: string
-          enum: [LOW, MEDIUM, HIGH]
-        warnings:
-          type: array
-          items:
-            type: string
-        assumptions:
-          type: object
-          additionalProperties: true
         charts:
           type: array
           items:
-            $ref: '#/components/schemas/ChartSpecV1'
-
-  responses:
-    ChartSpecResponse:
-      description: Single chart spec
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ChartSpecV1'
-          examples:
-            yield_projection:
-              summary: Yield projection
-              externalValue:
-                description: See docs/fixtures/charts/simulation-yield-projection.json
+            $ref: '#/components/schemas/ChartContract'

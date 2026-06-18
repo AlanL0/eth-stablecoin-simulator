@@ -1,0 +1,56 @@
+{
+  "schemaVersion" : "2.0",
+  "chartId" : "protocol_rates_comparison",
+  "title" : "Protocol Return Comparison (Annualized)",
+  "description" : "Illustrative deployed-capital net returns by venue — not investment advice.",
+  "xAxis" : {
+    "type" : "category",
+    "label" : "Protocol venue",
+    "format" : "string"
+  },
+  "yAxis" : {
+    "type" : "linear",
+    "label" : "Protocol return (annualized)",
+    "unit" : "percent",
+    "format" : "percent"
+  },
+  "series" : [ {
+    "id" : "protocol_return",
+    "label" : "Protocol return (annualized)",
+    "unit" : "percent",
+    "style" : {
+      "geometry" : "bar",
+      "colorToken" : "primary"
+    },
+    "data" : [ {
+      "x" : "aave",
+      "plotValue" : 4.20,
+      "displayValue" : "4.2"
+    }, {
+      "x" : "compound",
+      "plotValue" : 3.80,
+      "displayValue" : "3.8"
+    }, {
+      "x" : "maker_dsr",
+      "plotValue" : 5.00,
+      "displayValue" : "5.0"
+    } ]
+  } ],
+  "annotations" : [ ],
+  "assumptions" : {
+    "chartType" : "bar",
+    "asset" : "USDC"
+  },
+  "warnings" : [ ],
+  "provenance" : {
+    "builder" : "java-service/protocol-rates-chart-builder",
+    "generatedAt" : "2026-06-09T12:00:01Z",
+    "methodology" : "seed_catalog_v1",
+    "sources" : [ {
+      "field" : "apyPct",
+      "source" : "seed",
+      "observedAt" : "2026-06-09T12:00:01Z",
+      "stale" : false
+    } ]
+  }
+}

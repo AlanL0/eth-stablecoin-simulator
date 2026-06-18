@@ -1,68 +1,86 @@
 {
-  "schemaVersion": "1.0",
-  "chartId": "health_ratio_sweep",
-  "chartType": "line",
-  "title": "Health Ratio Across ETH Prices",
-  "subtitle": "Single-scenario sweep at current debt and protocol assumptions",
-  "xAxis": {
-    "type": "linear",
-    "label": "ETH price",
-    "unit": "usd",
-    "format": "usd",
-    "domain": [1900, 5700]
+  "schemaVersion" : "2.0",
+  "chartId" : "health_ratio_sweep",
+  "title" : "Collateralization Risk Margin Across ETH Prices",
+  "description" : "Single-scenario sweep at current debt and protocol assumptions",
+  "xAxis" : {
+    "type" : "linear",
+    "label" : "ETH price",
+    "unit" : "usd",
+    "format" : "usd",
+    "domain" : [ 1900.00, 5700.00 ]
   },
-  "yAxis": {
-    "type": "linear",
-    "label": "Health ratio",
-    "format": "number",
-    "domain": [0.5, 2.0]
+  "yAxis" : {
+    "type" : "linear",
+    "label" : "Collateralization risk margin",
+    "format" : "number",
+    "domain" : [ 0.5, 2.0 ]
   },
-  "series": [
-    {
-      "id": "health_ratio",
-      "name": "Health ratio",
-      "geometry": "line",
-      "points": [
-        { "x": 1900, "y": 0.6 },
-        { "x": 2850, "y": 0.9 },
-        { "x": 3800, "y": 1.2 },
-        { "x": 4750, "y": 1.5 },
-        { "x": 5700, "y": 1.8 }
-      ],
-      "style": { "colorToken": "primary" }
-    }
-  ],
-  "annotations": [
-    {
-      "id": "spot_marker",
-      "kind": "vertical_line",
-      "axis": "x",
-      "value": 3800,
-      "label": "Current ETH price",
-      "severity": "info"
+  "series" : [ {
+    "id" : "collateralization_risk_margin",
+    "label" : "Collateralization risk margin",
+    "unit" : "ratio",
+    "style" : {
+      "geometry" : "line",
+      "colorToken" : "primary"
     },
-    {
-      "id": "high_risk_band",
-      "kind": "band",
-      "axis": "y",
-      "value": 0.5,
-      "valueEnd": 1.25,
-      "label": "High risk zone",
-      "severity": "high"
-    }
-  ],
-  "meta": {
-    "protocol": "maker_sky",
-    "ethPriceUsd": 3800,
-    "sources": [
-      {
-        "field": "ethPriceUsd",
-        "source": "chainlink",
-        "observedAt": "2026-06-09T12:00:00Z",
-        "stale": false
-      }
-    ]
+    "data" : [ {
+      "x" : 1900.00,
+      "plotValue" : 0.6,
+      "displayValue" : "0.6"
+    }, {
+      "x" : 2850.00,
+      "plotValue" : 0.9,
+      "displayValue" : "0.9"
+    }, {
+      "x" : 3800.00,
+      "plotValue" : 1.2,
+      "displayValue" : "1.2"
+    }, {
+      "x" : 4750.00,
+      "plotValue" : 1.5,
+      "displayValue" : "1.5"
+    }, {
+      "x" : 5700.00,
+      "plotValue" : 1.8,
+      "displayValue" : "1.8"
+    } ]
+  } ],
+  "annotations" : [ {
+    "id" : "spot_marker",
+    "kind" : "vertical_line",
+    "axis" : "x",
+    "plotValue" : 3800.00,
+    "displayValue" : "3800.00",
+    "label" : "Current ETH price",
+    "severity" : "info"
+  }, {
+    "id" : "high_risk_band",
+    "kind" : "band",
+    "axis" : "y",
+    "plotValue" : 0.50,
+    "displayValue" : "0.5",
+    "plotValueEnd" : 1.25,
+    "displayValueEnd" : "1.25",
+    "label" : "High risk zone",
+    "severity" : "high"
+  } ],
+  "assumptions" : {
+    "chartType" : "line",
+    "protocol" : "maker_sky",
+    "ethPriceUsd" : "3800",
+    "ethAmount" : "2",
+    "stablecoinDebtUsd" : "4222.22"
   },
-  "source": "java-service/simulation-chart-builder",
-  "generatedAt": "2026-06-09T12:00:01Z"
+  "warnings" : [ ],
+  "provenance" : {
+    "builder" : "java-service/simulation-chart-builder",
+    "generatedAt" : "2026-06-09T12:00:01Z",
+    "sources" : [ {
+      "field" : "ethPriceUsd",
+      "source" : "chainlink",
+      "observedAt" : "2026-06-09T12:00:01Z",
+      "stale" : false
+    } ]
+  }
 }
