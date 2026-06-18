@@ -123,6 +123,15 @@
     </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>mainnet-smoke</id>
+      <properties>
+        <mainnet.rpc.url>${env.ETH_RPC_URL}</mainnet.rpc.url>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
