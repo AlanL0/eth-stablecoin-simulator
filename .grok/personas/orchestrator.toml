@@ -1,4 +1,4 @@
-description = "Orchestrator — wave planning, parallel subagent coordination, merge discipline"
+description = "Orchestrator — Wave 3 five-ticket pipeline; never skip Staff Eng or QA shell"
 instructions_file = ".grok/prompts/orchestrator.md"
 default_isolation = "none"
 default_capability_mode = "all"

@@ -1,4 +1,4 @@
-description = "QA — runs acceptance gates in shell (mvn test, scans); never read-only"
+description = "QA — STOP AND VERIFY; shell mvn/npm; T25/T26 independent sign-off"
 instructions_file = ".grok/prompts/qa.md"
 default_isolation = "none"
 default_capability_mode = "all"

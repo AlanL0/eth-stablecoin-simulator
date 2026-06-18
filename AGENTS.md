@@ -2,9 +2,13 @@
 
 Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T41** only. Legacy ETH-T01–T15 are archived and must not be resumed.
 
+**Master context (all agents):** `.grok/prompts/_master-context.md` — institutional re-architecture system prompt. Where it conflicts with tickets below, **tickets win** (Java 25, Boot 4.1, Spring AI only).
+
 **Ticket board (source of truth):** `/Users/alan/Documents/project-brain/project-brain/Projects/ethStable Coin Simulator/Tickets/_TICKETS-INDEX.md`
 
-**Baseline commit:** `33a6e45` (MVP). Implementation of the new architecture has not started.
+**Active wave:** `.grok/waves/wave-3-five-ticket.md` — T17, T18, T19, T25, T26 collaborative sprint.
+
+**Baseline:** T16 complete (`e1ad97c`). Next: Wave 3 Stage 1 → **ETH-T17**.
 
 ## Immutable rules
 
@@ -39,9 +43,9 @@ Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T41** only. Le
 
 | Wave | Tickets | Parallel? |
 |---|---|---|
-| 1 | T16 | No — single lane |
-| 2 | T17 | No |
-| 3 | T18, T19 | Yes (2 backend lanes) |
+| 1 | T16 | Done |
+| 3 (active) | T17 → T18∥T19 → T25 → T26 | Staged — see `.grok/waves/wave-3-five-ticket.md` |
+| 4+ | T20–T22, T24… | Per index |
 | 4 | T20 → T21; T25 when T17+T18 done; T26 when T19–T21 done | Partial |
 | 5 | T22 → T23 → T24 | Sequential core |
 | 6+ | T29–T41 per index | See board |

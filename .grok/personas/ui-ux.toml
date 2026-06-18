@@ -1,4 +1,4 @@
-description = "UI/UX — institutional copy, layout, a11y (frontend/)"
+description = "UI/UX — TradFi lexicon + ChartContract display; Wave 3 read-only prep"
 instructions_file = ".grok/prompts/ui-ux.md"
 default_isolation = "worktree"
 default_capability_mode = "all"

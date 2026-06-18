@@ -1,4 +1,4 @@
-description = "Backend — java-service, db, Spring Boot re-architecture (ETH-T16–T23)"
+description = "Backend — Principal Java architect; master context + PHASE 1–3 tickets"
 instructions_file = ".grok/prompts/backend.md"
 default_isolation = "worktree"
 default_capability_mode = "all"
