@@ -19,20 +19,20 @@ import java.util.Optional;
 @ConditionalOnBean(DataSource.class)
 public class IngestionLeaderLock {
 
-    /**
-     * Stable advisory lock key for ETH mainnet ingestion (T21 will namespace per workload).
-     */
-    public static final long INGESTION_ADVISORY_LOCK_KEY = 1_928_374_651L;
-
     private final JdbcClient jdbcClient;
 
     public IngestionLeaderLock(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
 
+    public static long advisoryLockKey(String sourceKey, long chainId) {
+        return (long) (sourceKey + ":" + chainId).hashCode() & 0x7fff_ffffL;
+    }
+
     public boolean tryAcquire(String sourceKey, long chainId, String owner, Duration leaseDuration) {
+        long lockKey = advisoryLockKey(sourceKey, chainId);
         Boolean acquired = jdbcClient.sql("select pg_try_advisory_lock(?)")
-                .param(INGESTION_ADVISORY_LOCK_KEY)
+                .param(lockKey)
                 .query(Boolean.class)
                 .single();
         if (!Boolean.TRUE.equals(acquired)) {
@@ -68,8 +68,9 @@ public class IngestionLeaderLock {
     }
 
     public void release(String sourceKey, long chainId) {
+        long lockKey = advisoryLockKey(sourceKey, chainId);
         jdbcClient.sql("select pg_advisory_unlock(?)")
-                .param(INGESTION_ADVISORY_LOCK_KEY)
+                .param(lockKey)
                 .query(Boolean.class)
                 .single();
         jdbcClient.sql("""

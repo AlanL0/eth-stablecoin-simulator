@@ -12,4 +12,9 @@ public interface ProtocolAdapter {
     boolean enabled();
 
     List<ProtocolRateQuote> fetchQuotes();
+
+    /**
+     * Block-pinned quotes for finalized ingestion. Implementations must not substitute static data.
+     */
+    List<ProtocolRateQuote> fetchQuotesAtBlock(long blockNumber);
 }

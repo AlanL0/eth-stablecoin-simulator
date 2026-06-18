@@ -52,6 +52,19 @@ eth-simulator:
   rpc-read-timeout-ms: 30000
   rpc-call-timeout-ms: 30000
   blocking-io-max-concurrency: 64
+  ingestion:
+    enabled: true
+    confirmation-depth: 12
+    range-size: 10
+    poll-interval-ms: 30000
+    request-timeout-ms: 30000
+    max-retries: 3
+    retry-backoff-ms: 1000
+    max-catch-up-blocks: 1000
+    max-source-lag-blocks: 100
+    max-reorg-window-blocks: 64
+    lease-duration-seconds: 30
+    websocket-wake-enabled: true
   protocol-sources:
     chain-id: 1
     chainlink:

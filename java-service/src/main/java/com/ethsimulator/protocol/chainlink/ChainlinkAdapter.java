@@ -55,8 +55,19 @@ public class ChainlinkAdapter implements ProtocolAdapter {
         if (!enabled()) {
             return List.of();
         }
+        return fetchQuotesAtBlock(ethCallClient.latestBlock().number().longValue());
+    }
 
-        EthBlockHeader block = ethCallClient.latestBlock();
+    @Override
+    public List<ProtocolRateQuote> fetchQuotesAtBlock(long blockNumber) {
+        if (!enabled()) {
+            return List.of();
+        }
+        EthBlockHeader block = ethCallClient.blockAt(BigInteger.valueOf(blockNumber));
+        return fetchQuotesAtBlock(block);
+    }
+
+    private List<ProtocolRateQuote> fetchQuotesAtBlock(EthBlockHeader block) {
         BlockProvenance provenance = provenance(block);
         Instant observedAt = clock.instant();
         String feed = properties.getChainlink().getAddress();
