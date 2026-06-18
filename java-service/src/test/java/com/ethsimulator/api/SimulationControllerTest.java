@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.hamcrest.Matchers.hasSize;
@@ -69,15 +68,15 @@ class SimulationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.collateralValueUsd", closeTo(7600.0, 0.01)))
-                .andExpect(jsonPath("$.stablecoinDebtUsd", closeTo(4222.22, 0.01)))
-                .andExpect(jsonPath("$.liquidationPriceUsd", closeTo(3166.67, 0.01)))
-                .andExpect(jsonPath("$.projectedNetYieldUsd", closeTo(4.91, 0.02)))
-                .andExpect(jsonPath("$.healthRatio", closeTo(1.2, 0.01)))
+                .andExpect(jsonPath("$.collateralValueUsd", is("7600.00")))
+                .andExpect(jsonPath("$.stablecoinDebtUsd", is("4222.22")))
+                .andExpect(jsonPath("$.liquidationPriceUsd", is("3166.67")))
+                .andExpect(jsonPath("$.projectedNetYieldUsd", is("4.91")))
+                .andExpect(jsonPath("$.healthRatio", is("1.2000")))
                 .andExpect(jsonPath("$.riskTier", is("HIGH")))
                 .andExpect(jsonPath("$.assumptions.ethPriceSource", is("static")))
-                .andExpect(jsonPath("$.treasuryContext.yourMint.impliedTreasuryBackingUsd", closeTo(3800.0, 0.01)))
-                .andExpect(jsonPath("$.treasuryContext.yourMint.annualIssuerReserveYieldUsd", closeTo(171.0, 0.01)))
+                .andExpect(jsonPath("$.treasuryContext.yourMint.impliedTreasuryBackingUsd", is("3800.00")))
+                .andExpect(jsonPath("$.treasuryContext.yourMint.annualIssuerReserveYieldUsd", is("171.00")))
                 .andExpect(jsonPath("$.charts", hasSize(4)))
                 .andExpect(jsonPath("$.charts[0].chartId", is("simulation_yield_projection")))
                 .andExpect(jsonPath("$.charts[0].generatedAt", notNullValue()))
@@ -100,8 +99,8 @@ class SimulationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.stablecoinDebtUsd", closeTo(4222.22, 0.01)))
-                .andExpect(jsonPath("$.assumptions.ethAmount", closeTo(2.0, 0.01)));
+                .andExpect(jsonPath("$.stablecoinDebtUsd", is("4222.22")))
+                .andExpect(jsonPath("$.assumptions.ethAmount", is("2.0000")));
     }
 
     @Test
@@ -116,7 +115,7 @@ class SimulationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.stablecoinDebtUsd", closeTo(4222.22, 0.01)));
+                .andExpect(jsonPath("$.stablecoinDebtUsd", is("4222.22")));
     }
 
     @Test
@@ -221,7 +220,7 @@ class SimulationControllerTest {
                                 }
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.treasuryContext.assumptions.reserveInTreasuriesPct", closeTo(75.0, 0.01)));
+                .andExpect(jsonPath("$.treasuryContext.assumptions.reserveInTreasuriesPct", is("75")));
     }
 
     @Test

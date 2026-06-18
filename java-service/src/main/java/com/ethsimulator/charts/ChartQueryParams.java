@@ -2,6 +2,7 @@ package com.ethsimulator.charts;
 
 import com.ethsimulator.api.dto.SimulationRequest;
 import com.ethsimulator.simulation.SimulationLimits;
+import com.ethsimulator.util.FinancialMath;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -10,33 +11,35 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
+
 public class ChartQueryParams {
 
     @Positive
-    private Double ethAmount;
+    private BigDecimal ethAmount;
 
     @Positive
-    private Double collateralUsd;
+    private BigDecimal collateralUsd;
 
     @NotBlank
     private String protocol;
 
     @Positive
     @DecimalMax("10.0")
-    private Double targetCollateralRatio;
+    private BigDecimal targetCollateralRatio;
 
     @Positive
     @DecimalMax("10.0")
-    private Double liquidationRatio;
+    private BigDecimal liquidationRatio;
 
     @PositiveOrZero
     @DecimalMax("100.0")
-    private Double stabilityFeePct;
+    private BigDecimal stabilityFeePct;
 
     @NotNull
     @PositiveOrZero
     @DecimalMax("100.0")
-    private Double deployYieldPct = 5.0;
+    private BigDecimal deployYieldPct = FinancialMath.bd("5.0");
 
     @Min(0)
     @Max(SimulationLimits.MAX_YEARS)
@@ -47,7 +50,7 @@ public class ChartQueryParams {
     private Integer compoundsPerYear = 12;
 
     @Positive
-    private Double ethPriceUsd;
+    private BigDecimal ethPriceUsd;
 
     public SimulationRequest toSimulationRequest() {
         SimulationRequest request = new SimulationRequest();
@@ -65,19 +68,19 @@ public class ChartQueryParams {
         return request;
     }
 
-    public Double getEthAmount() {
+    public BigDecimal getEthAmount() {
         return ethAmount;
     }
 
-    public void setEthAmount(Double ethAmount) {
+    public void setEthAmount(BigDecimal ethAmount) {
         this.ethAmount = ethAmount;
     }
 
-    public Double getCollateralUsd() {
+    public BigDecimal getCollateralUsd() {
         return collateralUsd;
     }
 
-    public void setCollateralUsd(Double collateralUsd) {
+    public void setCollateralUsd(BigDecimal collateralUsd) {
         this.collateralUsd = collateralUsd;
     }
 
@@ -89,35 +92,35 @@ public class ChartQueryParams {
         this.protocol = protocol;
     }
 
-    public Double getTargetCollateralRatio() {
+    public BigDecimal getTargetCollateralRatio() {
         return targetCollateralRatio;
     }
 
-    public void setTargetCollateralRatio(Double targetCollateralRatio) {
+    public void setTargetCollateralRatio(BigDecimal targetCollateralRatio) {
         this.targetCollateralRatio = targetCollateralRatio;
     }
 
-    public Double getLiquidationRatio() {
+    public BigDecimal getLiquidationRatio() {
         return liquidationRatio;
     }
 
-    public void setLiquidationRatio(Double liquidationRatio) {
+    public void setLiquidationRatio(BigDecimal liquidationRatio) {
         this.liquidationRatio = liquidationRatio;
     }
 
-    public Double getStabilityFeePct() {
+    public BigDecimal getStabilityFeePct() {
         return stabilityFeePct;
     }
 
-    public void setStabilityFeePct(Double stabilityFeePct) {
+    public void setStabilityFeePct(BigDecimal stabilityFeePct) {
         this.stabilityFeePct = stabilityFeePct;
     }
 
-    public Double getDeployYieldPct() {
+    public BigDecimal getDeployYieldPct() {
         return deployYieldPct;
     }
 
-    public void setDeployYieldPct(Double deployYieldPct) {
+    public void setDeployYieldPct(BigDecimal deployYieldPct) {
         this.deployYieldPct = deployYieldPct;
     }
 
@@ -137,11 +140,11 @@ public class ChartQueryParams {
         this.compoundsPerYear = compoundsPerYear;
     }
 
-    public Double getEthPriceUsd() {
+    public BigDecimal getEthPriceUsd() {
         return ethPriceUsd;
     }
 
-    public void setEthPriceUsd(Double ethPriceUsd) {
+    public void setEthPriceUsd(BigDecimal ethPriceUsd) {
         this.ethPriceUsd = ethPriceUsd;
     }
 }

@@ -2,9 +2,11 @@ package com.ethsimulator.market;
 
 import com.ethsimulator.api.error.ApiException;
 import com.ethsimulator.simulation.RiskTier;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -17,20 +19,20 @@ public class YieldService {
 
     private static final Map<String, List<SeedYield>> SEED = Map.of(
             "USDC", List.of(
-                    new SeedYield("aave", 4.2, RiskTier.LOW),
-                    new SeedYield("compound", 3.8, RiskTier.LOW),
-                    new SeedYield("maker_dsr", 5.0, RiskTier.MEDIUM)
+                    new SeedYield("aave", FinancialMath.bd("4.2"), RiskTier.LOW),
+                    new SeedYield("compound", FinancialMath.bd("3.8"), RiskTier.LOW),
+                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RiskTier.MEDIUM)
             ),
             "USDT", List.of(
-                    new SeedYield("aave", 3.9, RiskTier.LOW),
-                    new SeedYield("curve", 4.1, RiskTier.MEDIUM)
+                    new SeedYield("aave", FinancialMath.bd("3.9"), RiskTier.LOW),
+                    new SeedYield("curve", FinancialMath.bd("4.1"), RiskTier.MEDIUM)
             ),
             "DAI", List.of(
-                    new SeedYield("spark", 4.5, RiskTier.MEDIUM),
-                    new SeedYield("maker_dsr", 5.0, RiskTier.MEDIUM)
+                    new SeedYield("spark", FinancialMath.bd("4.5"), RiskTier.MEDIUM),
+                    new SeedYield("maker_dsr", FinancialMath.bd("5.0"), RiskTier.MEDIUM)
             ),
             "PYUSD", List.of(
-                    new SeedYield("aave", 3.5, RiskTier.LOW)
+                    new SeedYield("aave", FinancialMath.bd("3.5"), RiskTier.LOW)
             )
     );
 
@@ -63,7 +65,7 @@ public class YieldService {
         return new YieldSnapshotResponse(normalized, List.of(
                 new YieldQuote(
                         "static_conservative",
-                        3.0,
+                        FinancialMath.bd("3.0"),
                         "static_fallback",
                         RiskTier.LOW,
                         observedAt
@@ -80,6 +82,6 @@ public class YieldService {
         return catalog;
     }
 
-    private record SeedYield(String protocol, double apyPct, RiskTier riskTier) {
+    private record SeedYield(String protocol, BigDecimal apyPct, RiskTier riskTier) {
     }
 }

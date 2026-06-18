@@ -11,11 +11,9 @@ import com.ethsimulator.service.SimulationInputResolver.ResolvedSimulation;
 import com.ethsimulator.treasury.StablecoinReserveModel;
 import com.ethsimulator.treasury.TreasuryContext;
 import com.ethsimulator.treasury.TreasuryContextBuilder;
-import com.ethsimulator.util.UsdMath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -54,8 +52,8 @@ public class SimulationService {
                 resolved.deployYieldPct(),
                 resolved.years(),
                 resolved.compoundsPerYear(),
-                resolved.ethPriceDouble(),
-                resolved.ethAmountDouble(),
+                resolved.ethPrice().priceUsd(),
+                resolved.scaledEthAmount(),
                 resolved.ethPriceSourceKey(),
                 resolved.ethPrice().stale(),
                 generatedAt
@@ -85,9 +83,9 @@ public class SimulationService {
                     resolved.result().stablecoinDebtUsd(),
                     resolved.result().projectedNetYieldUsd(),
                     reserveModel,
-                    toBigDecimalOrNull(request.getReserveInTreasuriesPct()),
-                    toBigDecimalOrNull(request.getTbillApyPct()),
-                    toBigDecimalOrNull(request.getSystemSupplyUsd()),
+                    request.getReserveInTreasuriesPct(),
+                    request.getTbillApyPct(),
+                    request.getSystemSupplyUsd(),
                     resolved.years()
             );
             charts.add(ChartBuilders.treasuryContextChart(
@@ -95,20 +93,20 @@ public class SimulationService {
                     treasuryContext.yourMint().annualIssuerReserveYieldUsd(),
                     treasuryContext.personalComparison().yourDeFiProjectedNetYieldUsd(),
                     resolved.protocol(),
-                    resolved.result().stablecoinDebtUsd().doubleValue(),
+                    resolved.result().stablecoinDebtUsd(),
                     generatedAt
             ));
         }
 
         Assumptions assumptions = new Assumptions(
                 resolved.protocol(),
-                resolved.roundEthAmount(),
-                resolved.ethPriceDouble(),
+                resolved.scaledEthAmount(),
+                resolved.ethPrice().priceUsd(),
                 resolved.ethPriceSourceKey(),
-                resolved.targetCollateralRatio().doubleValue(),
-                resolved.liquidationRatio().doubleValue(),
-                resolved.stabilityFeePct().doubleValue(),
-                resolved.deployYieldPct().doubleValue(),
+                resolved.targetCollateralRatio(),
+                resolved.liquidationRatio(),
+                resolved.stabilityFeePct(),
+                resolved.deployYieldPct(),
                 resolved.years(),
                 resolved.compoundsPerYear(),
                 "linear_annualized_v1"
@@ -143,9 +141,4 @@ public class SimulationService {
                     HttpStatus.BAD_REQUEST);
         }
     }
-
-    private static BigDecimal toBigDecimalOrNull(Double value) {
-        return value != null ? UsdMath.bd(value) : null;
-    }
-
 }

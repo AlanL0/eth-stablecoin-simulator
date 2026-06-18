@@ -1,6 +1,7 @@
 package com.ethsimulator.api.dto;
 
 import com.ethsimulator.simulation.SimulationLimits;
+import com.ethsimulator.util.FinancialMath;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -9,36 +10,38 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
+
 public class SimulationRequest {
 
     @Positive
-    private Double ethAmount;
+    private BigDecimal ethAmount;
 
     @Positive
-    private Double collateralUsd;
+    private BigDecimal collateralUsd;
 
     @Positive
-    private Double ethPriceUsd;
+    private BigDecimal ethPriceUsd;
 
     @NotBlank
     private String protocol;
 
     @Positive
     @DecimalMax(value = "10.0", message = "must be <= 10")
-    private Double targetCollateralRatio;
+    private BigDecimal targetCollateralRatio;
 
     @Positive
     @DecimalMax(value = "10.0", message = "must be <= 10")
-    private Double liquidationRatio;
+    private BigDecimal liquidationRatio;
 
     @PositiveOrZero
     @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double stabilityFeePct;
+    private BigDecimal stabilityFeePct;
 
     @NotNull
     @PositiveOrZero
     @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double deployYieldPct = 5.0;
+    private BigDecimal deployYieldPct = FinancialMath.bd("5.0");
 
     @Min(0)
     @Max(value = SimulationLimits.MAX_YEARS, message = "must be <= 50")
@@ -54,36 +57,36 @@ public class SimulationRequest {
 
     @PositiveOrZero
     @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double reserveInTreasuriesPct;
+    private BigDecimal reserveInTreasuriesPct;
 
     @PositiveOrZero
     @DecimalMax(value = "100.0", message = "must be <= 100")
-    private Double tbillApyPct;
+    private BigDecimal tbillApyPct;
 
     @Positive
-    private Double systemSupplyUsd;
+    private BigDecimal systemSupplyUsd;
 
-    public Double getEthAmount() {
+    public BigDecimal getEthAmount() {
         return ethAmount;
     }
 
-    public void setEthAmount(Double ethAmount) {
+    public void setEthAmount(BigDecimal ethAmount) {
         this.ethAmount = ethAmount;
     }
 
-    public Double getCollateralUsd() {
+    public BigDecimal getCollateralUsd() {
         return collateralUsd;
     }
 
-    public void setCollateralUsd(Double collateralUsd) {
+    public void setCollateralUsd(BigDecimal collateralUsd) {
         this.collateralUsd = collateralUsd;
     }
 
-    public Double getEthPriceUsd() {
+    public BigDecimal getEthPriceUsd() {
         return ethPriceUsd;
     }
 
-    public void setEthPriceUsd(Double ethPriceUsd) {
+    public void setEthPriceUsd(BigDecimal ethPriceUsd) {
         this.ethPriceUsd = ethPriceUsd;
     }
 
@@ -95,35 +98,35 @@ public class SimulationRequest {
         this.protocol = protocol;
     }
 
-    public Double getTargetCollateralRatio() {
+    public BigDecimal getTargetCollateralRatio() {
         return targetCollateralRatio;
     }
 
-    public void setTargetCollateralRatio(Double targetCollateralRatio) {
+    public void setTargetCollateralRatio(BigDecimal targetCollateralRatio) {
         this.targetCollateralRatio = targetCollateralRatio;
     }
 
-    public Double getLiquidationRatio() {
+    public BigDecimal getLiquidationRatio() {
         return liquidationRatio;
     }
 
-    public void setLiquidationRatio(Double liquidationRatio) {
+    public void setLiquidationRatio(BigDecimal liquidationRatio) {
         this.liquidationRatio = liquidationRatio;
     }
 
-    public Double getStabilityFeePct() {
+    public BigDecimal getStabilityFeePct() {
         return stabilityFeePct;
     }
 
-    public void setStabilityFeePct(Double stabilityFeePct) {
+    public void setStabilityFeePct(BigDecimal stabilityFeePct) {
         this.stabilityFeePct = stabilityFeePct;
     }
 
-    public Double getDeployYieldPct() {
+    public BigDecimal getDeployYieldPct() {
         return deployYieldPct;
     }
 
-    public void setDeployYieldPct(Double deployYieldPct) {
+    public void setDeployYieldPct(BigDecimal deployYieldPct) {
         this.deployYieldPct = deployYieldPct;
     }
 
@@ -159,27 +162,27 @@ public class SimulationRequest {
         this.stablecoinReserveModel = stablecoinReserveModel;
     }
 
-    public Double getReserveInTreasuriesPct() {
+    public BigDecimal getReserveInTreasuriesPct() {
         return reserveInTreasuriesPct;
     }
 
-    public void setReserveInTreasuriesPct(Double reserveInTreasuriesPct) {
+    public void setReserveInTreasuriesPct(BigDecimal reserveInTreasuriesPct) {
         this.reserveInTreasuriesPct = reserveInTreasuriesPct;
     }
 
-    public Double getTbillApyPct() {
+    public BigDecimal getTbillApyPct() {
         return tbillApyPct;
     }
 
-    public void setTbillApyPct(Double tbillApyPct) {
+    public void setTbillApyPct(BigDecimal tbillApyPct) {
         this.tbillApyPct = tbillApyPct;
     }
 
-    public Double getSystemSupplyUsd() {
+    public BigDecimal getSystemSupplyUsd() {
         return systemSupplyUsd;
     }
 
-    public void setSystemSupplyUsd(Double systemSupplyUsd) {
+    public void setSystemSupplyUsd(BigDecimal systemSupplyUsd) {
         this.systemSupplyUsd = systemSupplyUsd;
     }
 }

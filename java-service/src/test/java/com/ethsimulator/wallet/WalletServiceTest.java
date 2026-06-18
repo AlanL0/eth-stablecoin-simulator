@@ -7,6 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.ethsimulator.util.FinancialMath;
+
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -43,7 +45,7 @@ class WalletServiceTest {
         assertThat(response.balances()).hasSize(4);
         assertThat(response.balances().get(1).symbol()).isEqualTo("USDT");
         assertThat(response.balances().get(1).balance()).isEqualTo("100.25");
-        assertThat(response.balances().get(1).balanceUsd()).isEqualTo(100.25);
+        assertThat(response.balances().get(1).balanceUsd()).isEqualTo(FinancialMath.bd("100.25"));
         assertThat(response.assumptions()).anyMatch(assumption -> assumption.contains("$1.00 USD"));
     }
 }

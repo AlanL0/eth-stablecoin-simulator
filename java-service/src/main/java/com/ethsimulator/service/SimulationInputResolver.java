@@ -8,17 +8,16 @@ import com.ethsimulator.simulation.ProtocolPreset;
 import com.ethsimulator.simulation.ProtocolPresetRegistry;
 import com.ethsimulator.simulation.SimulationEngine;
 import com.ethsimulator.simulation.SimulationEngine.Result;
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Component
 public class SimulationInputResolver {
 
-    private static final BigDecimal COLLATERAL_TOLERANCE_RATE = new BigDecimal("0.005");
+    private static final BigDecimal COLLATERAL_TOLERANCE_RATE = FinancialMath.bd("0.005");
 
     private final ProtocolPresetRegistry presetRegistry;
     private final EthPriceService ethPriceService;
@@ -52,7 +51,7 @@ public class SimulationInputResolver {
                 request.getLiquidationRatio(), preset.liquidationRatio());
         BigDecimal stabilityFeePct = overrideOrDefault(
                 request.getStabilityFeePct(), preset.stabilityFeePct());
-        BigDecimal deployYieldPct = UsdMath.bd(request.getDeployYieldPct());
+        BigDecimal deployYieldPct = request.getDeployYieldPct();
         int years = request.getYears();
         int compoundsPerYear = request.getCompoundsPerYear();
 
@@ -93,11 +92,11 @@ public class SimulationInputResolver {
         }
 
         if (hasEth && hasCollateral) {
-            BigDecimal ethFromRequest = UsdMath.bd(request.getEthAmount());
-            BigDecimal collateralFromRequest = UsdMath.bd(request.getCollateralUsd());
-            BigDecimal impliedCollateral = ethFromRequest.multiply(ethPriceUsd);
-            BigDecimal tolerance = impliedCollateral.abs().multiply(COLLATERAL_TOLERANCE_RATE);
-            BigDecimal diff = impliedCollateral.subtract(collateralFromRequest).abs();
+            BigDecimal ethFromRequest = request.getEthAmount();
+            BigDecimal collateralFromRequest = request.getCollateralUsd();
+            BigDecimal impliedCollateral = FinancialMath.multiply(ethFromRequest, ethPriceUsd);
+            BigDecimal tolerance = FinancialMath.multiply(impliedCollateral.abs(), COLLATERAL_TOLERANCE_RATE);
+            BigDecimal diff = FinancialMath.subtract(impliedCollateral, collateralFromRequest).abs();
             if (diff.compareTo(tolerance) > 0) {
                 throw new ApiException(
                         "INVALID_SIMULATION_INPUT",
@@ -108,15 +107,14 @@ public class SimulationInputResolver {
         }
 
         if (hasCollateral) {
-            return UsdMath.bd(request.getCollateralUsd())
-                    .divide(ethPriceUsd, 10, RoundingMode.HALF_UP);
+            return FinancialMath.divide(request.getCollateralUsd(), ethPriceUsd, FinancialMath.ETH_SCALE);
         }
 
-        return UsdMath.bd(request.getEthAmount());
+        return request.getEthAmount();
     }
 
-    private static BigDecimal overrideOrDefault(Double override, BigDecimal presetValue) {
-        return override != null ? UsdMath.bd(override) : presetValue;
+    private static BigDecimal overrideOrDefault(BigDecimal override, BigDecimal presetValue) {
+        return override != null ? override : presetValue;
     }
 
     public record ResolvedSimulation(
@@ -131,20 +129,12 @@ public class SimulationInputResolver {
             int years,
             int compoundsPerYear
     ) {
-        public double ethAmountDouble() {
-            return ethAmount.doubleValue();
-        }
-
-        public double ethPriceDouble() {
-            return ethPrice.priceUsd().doubleValue();
-        }
-
         public String ethPriceSourceKey() {
             return ethPrice.source().name().toLowerCase();
         }
 
-        public double roundEthAmount() {
-            return ethAmount.setScale(4, RoundingMode.HALF_UP).doubleValue();
+        public BigDecimal scaledEthAmount() {
+            return FinancialMath.scaleEth(ethAmount);
         }
     }
 }

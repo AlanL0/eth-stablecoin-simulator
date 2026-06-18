@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/api/price")
 public class EthPriceController {
@@ -20,7 +22,7 @@ public class EthPriceController {
     public EthPriceResponse ethPrice() {
         EthPriceQuote quote = ethPriceService.currentPrice();
         return new EthPriceResponse(
-                quote.priceUsd().doubleValue(),
+                quote.priceUsd(),
                 quote.source().name().toLowerCase(),
                 quote.observedAt().toString(),
                 quote.stale(),
@@ -28,6 +30,6 @@ public class EthPriceController {
         );
     }
 
-    public record EthPriceResponse(double priceUsd, String source, String observedAt, boolean stale, boolean degraded) {
+    public record EthPriceResponse(BigDecimal priceUsd, String source, String observedAt, boolean stale, boolean degraded) {
     }
 }

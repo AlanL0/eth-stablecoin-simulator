@@ -2,6 +2,7 @@ package com.ethsimulator.charts;
 
 import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.market.EthPriceCache;
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,7 +35,7 @@ class ChartsControllerTest {
     @BeforeEach
     void setUp() {
         ethPriceCache.clear();
-        when(chainlinkEthUsdReader.readPriceUsd()).thenReturn(Optional.of(new BigDecimal("3850")));
+        when(chainlinkEthUsdReader.readPriceUsd()).thenReturn(Optional.of(FinancialMath.bd("3850")));
     }
 
     @Test
@@ -60,7 +59,7 @@ class ChartsControllerTest {
                         .param("ethPriceUsd", "1000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chartId", is("liquidation_price_band")))
-                .andExpect(jsonPath("$.meta.ethPriceUsd", closeTo(3850.0, 0.01)))
+                .andExpect(jsonPath("$.meta.ethPriceUsd", is("3850")))
                 .andExpect(jsonPath("$.meta.sources[0].source", is("chainlink")))
                 .andExpect(jsonPath("$.meta.sources[0].stale", is(true)))
                 .andExpect(jsonPath("$.annotations[0].label", is("ETH spot (Chainlink)")));
@@ -73,6 +72,6 @@ class ChartsControllerTest {
                         .param("protocol", "maker_sky"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.chartId", is("health_ratio_sweep")))
-                .andExpect(jsonPath("$.series[0].points[2].y", closeTo(1.2, 0.05)));
+                .andExpect(jsonPath("$.series[0].points[2].y", is("1.2")));
     }
 }

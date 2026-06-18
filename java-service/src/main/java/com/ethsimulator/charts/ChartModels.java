@@ -2,8 +2,8 @@ package com.ethsimulator.charts;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 public final class ChartModels {
 
@@ -28,23 +28,23 @@ public final class ChartModels {
     ) {
     }
 
-    public record Axis(String type, String label, String unit, String format, List<Double> domain, Integer tickCount) {
+    public record Axis(String type, String label, String unit, String format, List<BigDecimal> domain, Integer tickCount) {
     }
 
     public record Series(String id, String name, String geometry, List<Point> points, SeriesStyle style) {
     }
 
-    public record Point(Object x, Double y, Double y0, Double y1, String label) {
-        public static Point ofXy(Object x, double y) {
+    public record Point(Object x, BigDecimal y, BigDecimal y0, BigDecimal y1, String label) {
+        public static Point ofXy(Object x, BigDecimal y) {
             return new Point(x, y, null, null, null);
         }
 
-        public static Point band(Object x, double y0, double y1) {
+        public static Point band(Object x, BigDecimal y0, BigDecimal y1) {
             return new Point(x, null, y0, y1, null);
         }
     }
 
-    public record SeriesStyle(String colorToken, String strokeDash, Double fillOpacity) {
+    public record SeriesStyle(String colorToken, String strokeDash, BigDecimal fillOpacity) {
     }
 
     public record Annotation(String id, String kind, String axis, Object value, Object valueEnd, String label, String severity) {
@@ -53,8 +53,8 @@ public final class ChartModels {
     public record Legend(String position, Boolean show) {
     }
 
-    public record Meta(String simulationId, String protocol, Double ethPriceUsd, Double ethAmount,
-                       Double stablecoinDebtUsd, List<Source> sources) {
+    public record Meta(String simulationId, String protocol, BigDecimal ethPriceUsd, BigDecimal ethAmount,
+                       BigDecimal stablecoinDebtUsd, List<Source> sources) {
     }
 
     public record Source(String field, String source, String observedAt, Boolean stale) {

@@ -2,6 +2,7 @@ package com.ethsimulator.api;
 
 import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.market.EthPriceCache;
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,14 +35,14 @@ class EthPriceControllerTest {
     @BeforeEach
     void setUp() {
         ethPriceCache.clear();
-        when(chainlinkEthUsdReader.readPriceUsd()).thenReturn(Optional.of(new BigDecimal("3850")));
+        when(chainlinkEthUsdReader.readPriceUsd()).thenReturn(Optional.of(FinancialMath.bd("3850")));
     }
 
     @Test
     void returnsChainlinkPriceWithSourceMetadata() throws Exception {
         mockMvc.perform(get("/api/price/eth"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.priceUsd", closeTo(3850.0, 0.01)))
+                .andExpect(jsonPath("$.priceUsd", is("3850")))
                 .andExpect(jsonPath("$.source", is("chainlink")))
                 .andExpect(jsonPath("$.observedAt").exists())
                 .andExpect(jsonPath("$.stale", is(false)))

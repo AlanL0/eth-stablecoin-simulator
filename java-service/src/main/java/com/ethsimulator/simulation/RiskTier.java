@@ -1,19 +1,19 @@
 package com.ethsimulator.simulation;
 
+import com.ethsimulator.util.FinancialMath;
+
+import java.math.BigDecimal;
+
 public enum RiskTier {
     LOW,
     MEDIUM,
     HIGH;
 
-    public static final double LOW_THRESHOLD = 1.75;
-    public static final double MEDIUM_THRESHOLD = 1.25;
-    public static final double CHART_HIGH_RISK_UPPER = 1.25;
-
-    public static RiskTier fromHealthRatio(double healthRatio) {
-        if (healthRatio >= LOW_THRESHOLD) {
+    public static RiskTier fromHealthRatio(BigDecimal healthRatio) {
+        if (healthRatio.compareTo(FinancialMath.LOW_HEALTH_THRESHOLD) >= 0) {
             return LOW;
         }
-        if (healthRatio >= MEDIUM_THRESHOLD) {
+        if (healthRatio.compareTo(FinancialMath.MEDIUM_HEALTH_THRESHOLD) >= 0) {
             return MEDIUM;
         }
         return HIGH;

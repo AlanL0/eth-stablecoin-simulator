@@ -1,29 +1,30 @@
 package com.ethsimulator.treasury;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 public record TreasuryContext(
         String disclaimer,
-        double yourMintUsd,
+        BigDecimal yourMintUsd,
         Map<String, Object> assumptions,
         MintContext yourMint,
         SystemContext systemContext,
         PersonalComparison personalComparison
 ) {
     public record MintContext(
-            double impliedTreasuryBackingUsd,
-            double annualIssuerReserveYieldUsd,
-            double projectedIssuerReserveYieldUsd
+            BigDecimal impliedTreasuryBackingUsd,
+            BigDecimal annualIssuerReserveYieldUsd,
+            BigDecimal projectedIssuerReserveYieldUsd
     ) {
     }
 
     public record SystemContext(
-            double impliedTreasuryBackingUsd,
-            double annualIssuerReserveYieldUsd,
-            double treasuryDemandProxyUsd
+            BigDecimal impliedTreasuryBackingUsd,
+            BigDecimal annualIssuerReserveYieldUsd,
+            BigDecimal treasuryDemandProxyUsd
     ) {
     }
 
-    public record PersonalComparison(double yourDeFiProjectedNetYieldUsd, String note) {
+    public record PersonalComparison(BigDecimal yourDeFiProjectedNetYieldUsd, String note) {
     }
 }

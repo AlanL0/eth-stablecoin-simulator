@@ -6,6 +6,7 @@ import com.ethsimulator.agent.dto.RecommendYieldRequest;
 import com.ethsimulator.agent.dto.RecommendYieldResponse;
 import com.ethsimulator.agent.dto.SummarizeAuditRequest;
 import com.ethsimulator.agent.dto.SummarizeAuditResponse;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -75,22 +76,22 @@ public class AgentStubService {
                     "request_chart",
                     Map.of("chartType", "scenario_chart"),
                     "run_simulation",
-                    0.86,
+                    FinancialMath.bd("0.86"),
                     List.of(),
                     List.of(),
                     List.of()
             );
         }
         if (lowered.contains("wallet") || lowered.contains("balance")) {
-            return new ParseGoalResponse("unknown", Map.of(), "open_wallet", 0.7, List.of(), List.of(), List.of());
+            return new ParseGoalResponse("unknown", Map.of(), "open_wallet", FinancialMath.bd("0.7"), List.of(), List.of(), List.of());
         }
         if (lowered.contains("audit") || lowered.contains("transfer")) {
-            return new ParseGoalResponse("audit_help", Map.of(), "open_audit", 0.7, List.of(), List.of(), List.of());
+            return new ParseGoalResponse("audit_help", Map.of(), "open_audit", FinancialMath.bd("0.7"), List.of(), List.of(), List.of());
         }
         if (lowered.contains("borrow") || lowered.contains("simulate") || lowered.contains("how much")) {
-            return new ParseGoalResponse("run_simulation", Map.of(), "run_simulation", 0.75, List.of(), List.of(), List.of());
+            return new ParseGoalResponse("run_simulation", Map.of(), "run_simulation", FinancialMath.bd("0.75"), List.of(), List.of(), List.of());
         }
-        return new ParseGoalResponse("unknown", Map.of(), "none", 0.5, List.of(), List.of(), List.of());
+        return new ParseGoalResponse("unknown", Map.of(), "none", FinancialMath.bd("0.5"), List.of(), List.of(), List.of());
     }
 
     public SummarizeAuditResponse summarizeAudit(SummarizeAuditRequest request) {

@@ -1,5 +1,6 @@
 package com.ethsimulator.market;
 
+import com.ethsimulator.util.FinancialMath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -44,22 +45,22 @@ public class PublicApiEthPriceClient {
     private Optional<BigDecimal> parsePrice(JsonNode root) {
         JsonNode ethereum = root.path("ethereum").path("usd");
         if (ethereum.isNumber()) {
-            return Optional.of(BigDecimal.valueOf(ethereum.asDouble()));
+            return Optional.of(FinancialMath.parseJsonNumber(ethereum));
         }
         Iterator<Map.Entry<String, JsonNode>> fields = root.properties().iterator();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             JsonNode usd = entry.getValue().path("usd");
             if (usd.isNumber()) {
-                return Optional.of(BigDecimal.valueOf(usd.asDouble()));
+                return Optional.of(FinancialMath.parseJsonNumber(usd));
             }
         }
         JsonNode priceUsd = root.path("priceUsd");
         if (priceUsd.isNumber()) {
-            return Optional.of(BigDecimal.valueOf(priceUsd.asDouble()));
+            return Optional.of(FinancialMath.parseJsonNumber(priceUsd));
         }
         if (root.isNumber()) {
-            return Optional.of(BigDecimal.valueOf(root.asDouble()));
+            return Optional.of(FinancialMath.parseJsonNumber(root));
         }
         return Optional.empty();
     }

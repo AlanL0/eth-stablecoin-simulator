@@ -25,13 +25,13 @@ public record SimulationResponse(
 ) {
     public record Assumptions(
             String protocol,
-            double ethAmount,
-            double ethPriceUsd,
+            BigDecimal ethAmount,
+            BigDecimal ethPriceUsd,
             String ethPriceSource,
-            double targetCollateralRatio,
-            double liquidationRatio,
-            double stabilityFeePct,
-            double deployYieldPct,
+            BigDecimal targetCollateralRatio,
+            BigDecimal liquidationRatio,
+            BigDecimal stabilityFeePct,
+            BigDecimal deployYieldPct,
             int years,
             int compoundsPerYear,
             String stabilityFeeModel

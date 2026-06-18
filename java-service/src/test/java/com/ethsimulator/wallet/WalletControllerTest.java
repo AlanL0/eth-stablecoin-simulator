@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -58,11 +57,11 @@ class WalletControllerTest {
                 .andExpect(jsonPath("$.balances", hasSize(4)))
                 .andExpect(jsonPath("$.balances[0].symbol", is("USDC")))
                 .andExpect(jsonPath("$.balances[0].balance", is("1250.5")))
-                .andExpect(jsonPath("$.balances[0].balanceUsd", closeTo(1250.5, 0.01)))
+                .andExpect(jsonPath("$.balances[0].balanceUsd", is("1250.50")))
                 .andExpect(jsonPath("$.balances[0].decimals", is(6)))
                 .andExpect(jsonPath("$.balances[2].symbol", is("DAI")))
                 .andExpect(jsonPath("$.balances[2].balance", is("42")))
-                .andExpect(jsonPath("$.balances[2].balanceUsd", closeTo(42.0, 0.01)))
+                .andExpect(jsonPath("$.balances[2].balanceUsd", is("42.00")))
                 .andExpect(jsonPath("$.source", is("chain")))
                 .andExpect(jsonPath("$.observedAt").exists())
                 .andExpect(jsonPath("$.assumptions", hasSize(3)));

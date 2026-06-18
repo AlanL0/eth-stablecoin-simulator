@@ -1,9 +1,8 @@
 package com.ethsimulator.simulation;
 
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 public final class SimulationEngine {
 
@@ -34,40 +33,56 @@ public final class SimulationEngine {
     ) {
         SimulationLimits.validateCompounding(years, compoundsPerYear);
 
-        BigDecimal collateralValueUsd = ethAmount.multiply(ethPriceUsd);
-        BigDecimal stablecoinDebtUsd = collateralValueUsd.divide(targetCollateralRatio, 10, RoundingMode.HALF_UP);
-        BigDecimal liquidationPriceUsd = stablecoinDebtUsd.multiply(liquidationRatio)
-                .divide(ethAmount, 10, RoundingMode.HALF_UP);
-        BigDecimal annualStabilityFeeUsd = stablecoinDebtUsd.multiply(UsdMath.percentToRate(stabilityFeePct));
+        BigDecimal collateralValueUsd = FinancialMath.multiply(ethAmount, ethPriceUsd);
+        BigDecimal stablecoinDebtUsd = FinancialMath.divide(
+                collateralValueUsd, targetCollateralRatio, FinancialMath.RATE_SCALE);
+        BigDecimal liquidationPriceUsd = FinancialMath.divide(
+                FinancialMath.multiply(stablecoinDebtUsd, liquidationRatio),
+                ethAmount,
+                FinancialMath.RATE_SCALE);
+        BigDecimal annualStabilityFeeUsd = FinancialMath.multiply(
+                stablecoinDebtUsd, FinancialMath.humanPercentToRate(stabilityFeePct));
 
-        BigDecimal ratePerPeriod = UsdMath.percentToRate(deployYieldPct)
-                .divide(BigDecimal.valueOf(compoundsPerYear), 10, RoundingMode.HALF_UP);
-        BigDecimal growth = BigDecimal.ONE.add(ratePerPeriod)
-                .pow(years * compoundsPerYear);
-        BigDecimal projectedGrossYieldUsd = stablecoinDebtUsd.multiply(growth.subtract(BigDecimal.ONE));
-        BigDecimal projectedNetYieldUsd = projectedGrossYieldUsd.subtract(
-                annualStabilityFeeUsd.multiply(BigDecimal.valueOf(years)));
+        BigDecimal ratePerPeriod = FinancialMath.divide(
+                FinancialMath.humanPercentToRate(deployYieldPct),
+                FinancialMath.bd(compoundsPerYear),
+                FinancialMath.RATE_SCALE);
+        BigDecimal growth = FinancialMath.add(BigDecimal.ONE, ratePerPeriod)
+                .pow(years * compoundsPerYear, FinancialMath.INTERMEDIATE);
+        BigDecimal projectedGrossYieldUsd = FinancialMath.multiply(
+                stablecoinDebtUsd, FinancialMath.subtract(growth, BigDecimal.ONE));
+        BigDecimal projectedNetYieldUsd = FinancialMath.subtract(
+                projectedGrossYieldUsd,
+                FinancialMath.multiply(annualStabilityFeeUsd, FinancialMath.bd(years)));
 
-        BigDecimal healthRatio = collateralValueUsd.divide(
-                stablecoinDebtUsd.multiply(liquidationRatio), 10, RoundingMode.HALF_UP);
-        RiskTier riskTier = RiskTier.fromHealthRatio(healthRatio.doubleValue());
+        BigDecimal healthRatio = FinancialMath.divide(
+                collateralValueUsd,
+                FinancialMath.multiply(stablecoinDebtUsd, liquidationRatio),
+                FinancialMath.RATIO_SCALE);
+        RiskTier riskTier = RiskTier.fromHealthRatio(healthRatio);
 
         return new Result(
-                UsdMath.roundUsd(collateralValueUsd),
-                UsdMath.roundUsd(stablecoinDebtUsd),
-                UsdMath.roundUsd(liquidationPriceUsd),
-                UsdMath.roundUsd(annualStabilityFeeUsd),
-                UsdMath.roundUsd(projectedGrossYieldUsd),
-                UsdMath.roundUsd(projectedNetYieldUsd),
-                healthRatio.setScale(4, RoundingMode.HALF_UP),
+                FinancialMath.scaleUsd(collateralValueUsd),
+                FinancialMath.scaleUsd(stablecoinDebtUsd),
+                FinancialMath.scaleUsd(liquidationPriceUsd),
+                FinancialMath.scaleUsd(annualStabilityFeeUsd),
+                FinancialMath.scaleUsd(projectedGrossYieldUsd),
+                FinancialMath.scaleUsd(projectedNetYieldUsd),
+                healthRatio,
                 riskTier
         );
     }
 
-    public static double healthAtPrice(BigDecimal ethAmount, BigDecimal ethPriceUsd,
-                                       BigDecimal stablecoinDebtUsd, BigDecimal liquidationRatio) {
-        BigDecimal collateral = ethAmount.multiply(ethPriceUsd);
-        return collateral.divide(stablecoinDebtUsd.multiply(liquidationRatio), 10, RoundingMode.HALF_UP)
-                .doubleValue();
+    public static BigDecimal healthAtPrice(
+            BigDecimal ethAmount,
+            BigDecimal ethPriceUsd,
+            BigDecimal stablecoinDebtUsd,
+            BigDecimal liquidationRatio
+    ) {
+        BigDecimal collateral = FinancialMath.multiply(ethAmount, ethPriceUsd);
+        return FinancialMath.divide(
+                collateral,
+                FinancialMath.multiply(stablecoinDebtUsd, liquidationRatio),
+                FinancialMath.RATIO_SCALE);
     }
 }

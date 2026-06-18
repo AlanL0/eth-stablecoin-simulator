@@ -2,12 +2,12 @@ package com.ethsimulator.market;
 
 import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.config.EthSimulatorProperties;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -16,7 +16,7 @@ import java.util.Optional;
 @Service
 public class EthPriceService {
 
-    private static final BigDecimal CLIENT_HINT_TOLERANCE = new BigDecimal("0.005");
+    private static final BigDecimal CLIENT_HINT_TOLERANCE = FinancialMath.bd("0.005");
 
     private final EthSimulatorProperties properties;
     private final ChainlinkEthUsdReader chainlinkReader;
@@ -45,21 +45,22 @@ public class EthPriceService {
         return resolvePrice(null);
     }
 
-    public EthPriceQuote resolvePrice(Double clientHintUsd) {
+    public EthPriceQuote resolvePrice(BigDecimal clientHintUsd) {
         EthPriceQuote quote = fetchFreshQuote();
         if (clientHintUsd == null) {
             return quote;
         }
-        BigDecimal hint = BigDecimal.valueOf(clientHintUsd);
-        BigDecimal drift = hint.subtract(quote.priceUsd()).abs()
-                .divide(quote.priceUsd(), 10, RoundingMode.HALF_UP);
+        BigDecimal drift = FinancialMath.divide(
+                FinancialMath.subtract(clientHintUsd, quote.priceUsd()).abs(),
+                quote.priceUsd(),
+                FinancialMath.RATE_SCALE);
         if (drift.compareTo(CLIENT_HINT_TOLERANCE) > 0) {
             return new EthPriceQuote(quote.priceUsd(), quote.source(), quote.observedAt(), true, quote.degraded());
         }
         return quote;
     }
 
-    public BigDecimal priceUsdForSimulation(Double clientHintUsd) {
+    public BigDecimal priceUsdForSimulation(BigDecimal clientHintUsd) {
         return resolvePrice(clientHintUsd).priceUsd();
     }
 

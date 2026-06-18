@@ -2,6 +2,7 @@ package com.ethsimulator.charts;
 
 import com.ethsimulator.market.EthPriceQuote;
 import com.ethsimulator.service.SimulationInputResolver.ResolvedSimulation;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -14,10 +15,10 @@ public class LiquidationBandChartBuilder {
         String spotLabel = spotLabel(price);
         return ChartBuilders.liquidationBand(
                 resolved.protocol(),
-                resolved.ethPriceDouble(),
-                resolved.result().liquidationPriceUsd().doubleValue(),
-                resolved.ethAmountDouble(),
-                resolved.result().stablecoinDebtUsd().doubleValue(),
+                price.priceUsd(),
+                resolved.result().liquidationPriceUsd(),
+                FinancialMath.scaleEth(resolved.ethAmount()),
+                resolved.result().stablecoinDebtUsd(),
                 resolved.ethPriceSourceKey(),
                 price.stale(),
                 spotLabel,

@@ -1,6 +1,6 @@
 package com.ethsimulator.charts;
 
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -16,13 +16,13 @@ class ChartBuildersTest {
     void yieldProjectionHasExpectedSeriesLengthForOneYear() {
         var chart = ChartBuilders.yieldProjection(
                 "maker_sky",
-                UsdMath.bd("4222.22"),
-                UsdMath.bd("211.11"),
-                UsdMath.bd("5.00"),
+                FinancialMath.bd("4222.22"),
+                FinancialMath.bd("211.11"),
+                FinancialMath.bd("5.00"),
                 1,
                 12,
-                3800,
-                2,
+                FinancialMath.bd("3800"),
+                FinancialMath.bd("2"),
                 "static",
                 false,
                 FIXTURE_TIME
@@ -38,13 +38,13 @@ class ChartBuildersTest {
     void yieldProjectionEndpointsMatchFixtureMath() {
         var chart = ChartBuilders.yieldProjection(
                 "maker_sky",
-                UsdMath.bd("4222.22"),
-                UsdMath.bd("211.11"),
-                UsdMath.bd("5.00"),
+                FinancialMath.bd("4222.22"),
+                FinancialMath.bd("211.11"),
+                FinancialMath.bd("5.00"),
                 1,
                 12,
-                3800,
-                2,
+                FinancialMath.bd("3800"),
+                FinancialMath.bd("2"),
                 "chainlink",
                 false,
                 FIXTURE_TIME
@@ -54,36 +54,43 @@ class ChartBuildersTest {
         var fees = chart.series().stream().filter(s -> "cumulative_fees".equals(s.id())).findFirst().orElseThrow();
         var net = chart.series().stream().filter(s -> "net_yield".equals(s.id())).findFirst().orElseThrow();
 
-        assertEquals(216.02, gross.points().get(2).y(), 0.02);
-        assertEquals(211.11, fees.points().get(2).y(), 0.02);
-        assertEquals(4.91, net.points().get(2).y(), 0.02);
+        assertEquals(FinancialMath.bd("216.02"), gross.points().get(2).y());
+        assertEquals(FinancialMath.bd("211.11"), fees.points().get(2).y());
+        assertEquals(FinancialMath.bd("4.91"), net.points().get(2).y());
     }
 
     @Test
     void liquidationBandStructure() {
         var chart = ChartBuilders.liquidationBand(
-                "maker_sky", 3800, 3166.67, 2, 4222.22,
-                "chainlink", false, "ETH spot (Chainlink)", FIXTURE_TIME);
+                "maker_sky",
+                FinancialMath.bd("3800"),
+                FinancialMath.bd("3166.67"),
+                FinancialMath.bd("2"),
+                FinancialMath.bd("4222.22"),
+                "chainlink",
+                false,
+                "ETH spot (Chainlink)",
+                FIXTURE_TIME);
 
         assertEquals("liquidation_price_band", chart.chartId());
         assertNotNull(chart.series().get(0).points().get(0).y0());
-        assertEquals(3800.0, chart.series().get(0).points().get(0).y1(), 0.01);
+        assertEquals(FinancialMath.bd("3800.00"), chart.series().get(0).points().get(0).y1());
     }
 
     @Test
     void healthSweepHasFivePointsAndAlignedRiskBand() {
         var chart = ChartBuilders.healthRatioSweep(
                 "maker_sky",
-                UsdMath.bd(2),
-                UsdMath.bd("4222.22"),
-                UsdMath.bd("1.50"),
-                UsdMath.bd(3800),
+                FinancialMath.bd("2"),
+                FinancialMath.bd("4222.22"),
+                FinancialMath.bd("1.50"),
+                FinancialMath.bd("3800"),
                 "chainlink",
                 false,
                 FIXTURE_TIME
         );
 
         assertEquals(5, chart.series().get(0).points().size());
-        assertEquals(1.2, chart.series().get(0).points().get(2).y(), 0.05);
+        assertEquals(FinancialMath.bd("1.2"), chart.series().get(0).points().get(2).y());
     }
 }

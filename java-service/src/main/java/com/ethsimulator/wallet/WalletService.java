@@ -3,7 +3,7 @@ package com.ethsimulator.wallet;
 import com.ethsimulator.blockchain.Erc20BalanceReader;
 import com.ethsimulator.config.TokenAllowlist;
 import com.ethsimulator.util.EvmAddressValidator;
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -42,7 +42,7 @@ public class WalletService {
                     token.contractAddress(),
                     token.decimals(),
                     balance.stripTrailingZeros().toPlainString(),
-                    UsdMath.roundUsdDouble(balance)
+                    FinancialMath.scaleUsd(balance)
             ));
         }
 

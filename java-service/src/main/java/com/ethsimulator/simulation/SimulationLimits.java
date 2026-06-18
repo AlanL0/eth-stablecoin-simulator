@@ -8,8 +8,6 @@ public final class SimulationLimits {
     public static final int MAX_YEARS = 50;
     public static final int MAX_COMPOUNDS_PER_YEAR = 365;
     public static final int MAX_COMPOUNDING_PERIODS = 10_000;
-    public static final double MAX_RATIO = 10.0;
-    public static final double MAX_PERCENT = 100.0;
 
     private SimulationLimits() {
     }

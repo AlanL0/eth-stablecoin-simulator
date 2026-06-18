@@ -1,7 +1,7 @@
 package com.ethsimulator.treasury;
 
 import com.ethsimulator.config.EthSimulatorProperties;
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -42,39 +42,41 @@ public class TreasuryContextBuilder {
 
         Map<String, Object> assumptions = new LinkedHashMap<>();
         assumptions.put("stablecoinReserveModel", model.key());
-        assumptions.put("reserveInTreasuriesPct", reservePct.doubleValue());
-        assumptions.put("tbillApyPct", tbillApy.doubleValue());
-        assumptions.put("backingRatio", 1.0);
+        assumptions.put("reserveInTreasuriesPct", reservePct);
+        assumptions.put("tbillApyPct", tbillApy);
+        assumptions.put("backingRatio", BigDecimal.ONE);
         assumptions.put("years", years);
-        assumptions.put("systemSupplyUsd", systemSupply.doubleValue());
+        assumptions.put("systemSupplyUsd", systemSupply);
         assumptions.put("systemSupplySource", "static_seed");
 
         return new TreasuryContext(
                 DISCLAIMER,
-                UsdMath.roundUsdDouble(mintedUsd),
+                FinancialMath.scaleUsd(mintedUsd),
                 assumptions,
                 new TreasuryContext.MintContext(
-                        UsdMath.roundUsdDouble(mintBacking),
-                        UsdMath.roundUsdDouble(mintAnnualYield),
-                        UsdMath.roundUsdDouble(mintAnnualYield.multiply(BigDecimal.valueOf(years)))
+                        FinancialMath.scaleUsd(mintBacking),
+                        FinancialMath.scaleUsd(mintAnnualYield),
+                        FinancialMath.scaleUsd(FinancialMath.multiply(mintAnnualYield, FinancialMath.bd(years)))
                 ),
                 new TreasuryContext.SystemContext(
-                        UsdMath.roundUsdDouble(systemBacking),
-                        UsdMath.roundUsdDouble(systemAnnualYield),
-                        UsdMath.roundUsdDouble(systemBacking)
+                        FinancialMath.scaleUsd(systemBacking),
+                        FinancialMath.scaleUsd(systemAnnualYield),
+                        FinancialMath.scaleUsd(systemBacking)
                 ),
                 new TreasuryContext.PersonalComparison(
-                        UsdMath.roundUsdDouble(projectedNetYieldUsd),
+                        FinancialMath.scaleUsd(projectedNetYieldUsd),
                         "Your DeFi deploy yield vs illustrative issuer reserve yield on the same notional — different economics."
                 )
         );
     }
 
     private static BigDecimal backing(BigDecimal amount, BigDecimal reservePct, BigDecimal backingRatio) {
-        return amount.multiply(UsdMath.percentToRate(reservePct)).multiply(backingRatio);
+        return FinancialMath.multiply(
+                FinancialMath.multiply(amount, FinancialMath.humanPercentToRate(reservePct)),
+                backingRatio);
     }
 
     private static BigDecimal yieldOn(BigDecimal backing, BigDecimal tbillApy) {
-        return backing.multiply(UsdMath.percentToRate(tbillApy));
+        return FinancialMath.multiply(backing, FinancialMath.humanPercentToRate(tbillApy));
     }
 }

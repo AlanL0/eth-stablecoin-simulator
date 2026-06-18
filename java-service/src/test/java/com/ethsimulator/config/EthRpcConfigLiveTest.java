@@ -4,6 +4,7 @@ import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.market.EthPriceQuote;
 import com.ethsimulator.market.EthPriceService;
 import com.ethsimulator.market.EthPriceSource;
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -12,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StringUtils;
 import org.web3j.protocol.Web3j;
-
-
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -51,6 +50,6 @@ class EthRpcConfigLiveTest {
 
         EthPriceQuote quote = ethPriceService.currentPrice();
         assertEquals(EthPriceSource.CHAINLINK, quote.source(), "expected Chainlink with live RPC");
-        assertNotEquals(3800.0, quote.priceUsd().doubleValue(), 0.01);
+        assertNotEquals(FinancialMath.bd("3800"), quote.priceUsd());
     }
 }

@@ -83,7 +83,7 @@ components:
           minItems: 2
           maxItems: 2
           items:
-            type: number
+            type: string
         tickCount:
           type: integer
           minimum: 2
@@ -113,11 +113,11 @@ components:
       properties:
         x: {}
         y:
-          type: number
+          type: string
         y0:
-          type: number
+          type: string
         y1:
-          type: number
+          type: string
         label:
           type: string
 
@@ -131,9 +131,7 @@ components:
           type: string
           enum: [solid, dashed, dotted]
         fillOpacity:
-          type: number
-          minimum: 0
-          maximum: 1
+          type: string
 
     ChartAnnotation:
       type: object
@@ -173,14 +171,11 @@ components:
         protocol:
           type: string
         ethPriceUsd:
-          type: number
-          format: double
+          type: string
         ethAmount:
-          type: number
-          format: double
+          type: string
         stablecoinDebtUsd:
-          type: number
-          format: double
+          type: string
         sources:
           type: array
           items:
@@ -215,19 +210,19 @@ components:
           type: string
           format: uuid
         collateralValueUsd:
-          type: number
+          type: string
         stablecoinDebtUsd:
-          type: number
+          type: string
         liquidationPriceUsd:
-          type: number
+          type: string
         annualStabilityFeeUsd:
-          type: number
+          type: string
         projectedGrossYieldUsd:
-          type: number
+          type: string
         projectedNetYieldUsd:
-          type: number
+          type: string
         healthRatio:
-          type: number
+          type: string
         riskTier:
           type: string
           enum: [LOW, MEDIUM, HIGH]

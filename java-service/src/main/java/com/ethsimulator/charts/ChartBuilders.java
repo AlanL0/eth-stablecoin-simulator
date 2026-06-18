@@ -1,11 +1,9 @@
 package com.ethsimulator.charts;
 
-import com.ethsimulator.simulation.RiskTier;
 import com.ethsimulator.simulation.SimulationEngine;
-import com.ethsimulator.util.UsdMath;
+import com.ethsimulator.util.FinancialMath;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +11,14 @@ import java.util.List;
 import static com.ethsimulator.charts.ChartModels.*;
 
 public final class ChartBuilders {
+
+    private static final BigDecimal[] HEALTH_SWEEP_MULTIPLIERS = {
+            FinancialMath.bd("0.5"),
+            FinancialMath.bd("0.75"),
+            FinancialMath.bd("1.0"),
+            FinancialMath.bd("1.25"),
+            FinancialMath.bd("1.5")
+    };
 
     private ChartBuilders() {
     }
@@ -24,8 +30,8 @@ public final class ChartBuilders {
             BigDecimal deployYieldPct,
             int years,
             int compoundsPerYear,
-            double ethPriceUsd,
-            double ethAmount,
+            BigDecimal ethPriceUsd,
+            BigDecimal ethAmount,
             String ethPriceSource,
             boolean ethPriceStale,
             Instant generatedAt
@@ -35,32 +41,39 @@ public final class ChartBuilders {
         List<Point> fees = new ArrayList<>();
         List<Point> net = new ArrayList<>();
 
-        BigDecimal ratePerPeriod = UsdMath.percentToRate(deployYieldPct)
-                .divide(BigDecimal.valueOf(compoundsPerYear), 10, RoundingMode.HALF_UP);
+        BigDecimal ratePerPeriod = FinancialMath.divide(
+                FinancialMath.humanPercentToRate(deployYieldPct),
+                FinancialMath.bd(compoundsPerYear),
+                FinancialMath.RATE_SCALE);
 
         for (int m = 0; m <= totalMonths; m += (totalMonths == 0 ? 1 : totalMonths / 2)) {
             if (m > totalMonths) {
                 break;
             }
-            int periods = (int) Math.round((double) m / 12.0 * compoundsPerYear);
-            BigDecimal growth = BigDecimal.ONE.add(ratePerPeriod).pow(periods);
-            BigDecimal grossUsd = stablecoinDebtUsd.multiply(growth.subtract(BigDecimal.ONE));
-            BigDecimal feeUsd = annualStabilityFeeUsd.multiply(BigDecimal.valueOf(m))
-                    .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
-            BigDecimal netUsd = grossUsd.subtract(feeUsd);
-            gross.add(Point.ofXy(m, UsdMath.roundUsdDouble(grossUsd)));
-            fees.add(Point.ofXy(m, UsdMath.roundUsdDouble(feeUsd)));
-            net.add(Point.ofXy(m, UsdMath.roundUsdDouble(netUsd)));
+            int periods = FinancialMath.toIntRounded(FinancialMath.divide(
+                    FinancialMath.multiply(FinancialMath.bd(m), FinancialMath.bd(compoundsPerYear)),
+                    FinancialMath.bd(12),
+                    0));
+            BigDecimal growth = FinancialMath.add(BigDecimal.ONE, ratePerPeriod).pow(periods);
+            BigDecimal grossUsd = FinancialMath.multiply(stablecoinDebtUsd, FinancialMath.subtract(growth, BigDecimal.ONE));
+            BigDecimal feeUsd = FinancialMath.divide(
+                    FinancialMath.multiply(annualStabilityFeeUsd, FinancialMath.bd(m)),
+                    FinancialMath.bd(12),
+                    FinancialMath.RATE_SCALE);
+            BigDecimal netUsd = FinancialMath.subtract(grossUsd, feeUsd);
+            gross.add(Point.ofXy(m, FinancialMath.scaleUsd(grossUsd)));
+            fees.add(Point.ofXy(m, FinancialMath.scaleUsd(feeUsd)));
+            net.add(Point.ofXy(m, FinancialMath.scaleUsd(netUsd)));
         }
         if (totalMonths > 0 && gross.stream().noneMatch(p -> ((Number) p.x()).intValue() == totalMonths)) {
             int m = totalMonths;
             int periods = years * compoundsPerYear;
-            BigDecimal growth = BigDecimal.ONE.add(ratePerPeriod).pow(periods);
-            BigDecimal grossUsd = stablecoinDebtUsd.multiply(growth.subtract(BigDecimal.ONE));
-            BigDecimal feeUsd = annualStabilityFeeUsd.multiply(BigDecimal.valueOf(years));
-            gross.add(Point.ofXy(m, UsdMath.roundUsdDouble(grossUsd)));
-            fees.add(Point.ofXy(m, UsdMath.roundUsdDouble(feeUsd)));
-            net.add(Point.ofXy(m, UsdMath.roundUsdDouble(grossUsd.subtract(feeUsd))));
+            BigDecimal growth = FinancialMath.add(BigDecimal.ONE, ratePerPeriod).pow(periods);
+            BigDecimal grossUsd = FinancialMath.multiply(stablecoinDebtUsd, FinancialMath.subtract(growth, BigDecimal.ONE));
+            BigDecimal feeUsd = FinancialMath.multiply(annualStabilityFeeUsd, FinancialMath.bd(years));
+            gross.add(Point.ofXy(m, FinancialMath.scaleUsd(grossUsd)));
+            fees.add(Point.ofXy(m, FinancialMath.scaleUsd(feeUsd)));
+            net.add(Point.ofXy(m, FinancialMath.scaleUsd(FinancialMath.subtract(grossUsd, feeUsd))));
         }
 
         String timestamp = generatedAt.toString();
@@ -71,11 +84,12 @@ public final class ChartBuilders {
                 "composed",
                 "Projected Yield vs Fees",
                 "Based on model assumptions — not live protocol guarantees",
-                new Axis("linear", "Month", "month", "month_index", List.of(0.0, (double) totalMonths), null),
+                new Axis("linear", "Month", "month", "month_index",
+                        List.of(FinancialMath.bd(0), FinancialMath.bd(totalMonths)), null),
                 new Axis("linear", "Cumulative USD", "usd", "usd", null, null),
                 List.of(
                         new Series("gross_yield", "Gross yield", "area", gross,
-                                new SeriesStyle("positive", null, 0.2)),
+                                new SeriesStyle("positive", null, FinancialMath.bd("0.2"))),
                         new Series("cumulative_fees", "Cumulative stability fees", "line", fees,
                                 new SeriesStyle("negative", "dashed", null)),
                         new Series("net_yield", "Net yield", "line", net,
@@ -83,7 +97,7 @@ public final class ChartBuilders {
                 ),
                 List.of(),
                 new Legend("bottom", true),
-                meta(protocol, ethPriceUsd, ethAmount, UsdMath.roundUsdDouble(stablecoinDebtUsd),
+                meta(protocol, ethPriceUsd, ethAmount, FinancialMath.scaleUsd(stablecoinDebtUsd),
                         timestamp, ethPriceSource, ethPriceStale),
                 "java-service/simulation-chart-builder",
                 timestamp
@@ -92,10 +106,10 @@ public final class ChartBuilders {
 
     public static ChartSpec liquidationBand(
             String protocol,
-            double spotUsd,
-            double liquidationUsd,
-            double ethAmount,
-            double debtUsd,
+            BigDecimal spotUsd,
+            BigDecimal liquidationUsd,
+            BigDecimal ethAmount,
+            BigDecimal debtUsd,
             String ethPriceSource,
             boolean ethPriceStale,
             String spotLabel,
@@ -112,10 +126,10 @@ public final class ChartBuilders {
                 new Axis("category", "Price marker", null, "usd", null, null),
                 new Axis("linear", "USD per ETH", "usd", "usd", null, null),
                 List.of(new Series("safe_band", "Collateral buffer", "band",
-                        List.of(Point.band("range", liquidationUsd, spotUsd)),
-                        new SeriesStyle("positive", null, 0.15))),
+                        List.of(Point.band("range", liquidationUsd, FinancialMath.scaleUsd(spotUsd))),
+                        new SeriesStyle("positive", null, FinancialMath.bd("0.15")))),
                 List.of(
-                        new Annotation("spot", "horizontal_line", "y", spotUsd, null, spotLabel, "info"),
+                        new Annotation("spot", "horizontal_line", "y", FinancialMath.scaleUsd(spotUsd), null, spotLabel, "info"),
                         new Annotation("liquidation", "horizontal_line", "y", liquidationUsd, null,
                                 "Liquidation price", "high")
                 ),
@@ -136,17 +150,17 @@ public final class ChartBuilders {
             boolean ethPriceStale,
             Instant generatedAt
     ) {
-        double[] multipliers = {0.5, 0.75, 1.0, 1.25, 1.5};
         List<Point> points = new ArrayList<>();
-        double minP = Double.MAX_VALUE;
-        double maxP = Double.MIN_VALUE;
-        for (double mult : multipliers) {
-            BigDecimal price = spotUsd.multiply(BigDecimal.valueOf(mult));
-            double health = SimulationEngine.healthAtPrice(ethAmount, price, stablecoinDebtUsd, liquidationRatio);
-            double p = UsdMath.roundUsdDouble(price);
-            points.add(Point.ofXy(p, Math.round(health * 10.0) / 10.0));
-            minP = Math.min(minP, p);
-            maxP = Math.max(maxP, p);
+        BigDecimal minP = null;
+        BigDecimal maxP = null;
+        for (BigDecimal mult : HEALTH_SWEEP_MULTIPLIERS) {
+            BigDecimal price = FinancialMath.multiply(spotUsd, mult);
+            BigDecimal health = SimulationEngine.healthAtPrice(ethAmount, price, stablecoinDebtUsd, liquidationRatio);
+            BigDecimal scaledPrice = FinancialMath.scaleUsd(price);
+            BigDecimal scaledHealth = health.setScale(1, FinancialMath.INTERMEDIATE.getRoundingMode());
+            points.add(Point.ofXy(scaledPrice, scaledHealth));
+            minP = minP == null ? scaledPrice : FinancialMath.min(minP, scaledPrice);
+            maxP = maxP == null ? scaledPrice : FinancialMath.max(maxP, scaledPrice);
         }
 
         String timestamp = generatedAt.toString();
@@ -158,29 +172,31 @@ public final class ChartBuilders {
                 "Health Ratio Across ETH Prices",
                 "Single-scenario sweep at current debt and protocol assumptions",
                 new Axis("linear", "ETH price", "usd", "usd", List.of(minP, maxP), null),
-                new Axis("linear", "Health ratio", null, "number", List.of(0.5, 2.0), null),
+                new Axis("linear", "Health ratio", null, "number",
+                        List.of(FinancialMath.bd("0.5"), FinancialMath.bd("2.0")), null),
                 List.of(new Series("health_ratio", "Health ratio", "line", points,
                         new SeriesStyle("primary", null, null))),
                 List.of(
-                        new Annotation("spot_marker", "vertical_line", "x", UsdMath.roundUsdDouble(spotUsd), null,
+                        new Annotation("spot_marker", "vertical_line", "x", FinancialMath.scaleUsd(spotUsd), null,
                                 "Current ETH price", "info"),
-                        new Annotation("high_risk_band", "band", "y", 0.5, RiskTier.CHART_HIGH_RISK_UPPER,
+                        new Annotation("high_risk_band", "band", "y", FinancialMath.bd("0.5"),
+                                FinancialMath.CHART_HIGH_RISK_UPPER,
                                 "High risk zone", "high")
                 ),
                 null,
-                meta(protocol, spotUsd.doubleValue(), ethAmount.doubleValue(),
-                        UsdMath.roundUsdDouble(stablecoinDebtUsd), timestamp, ethPriceSource, ethPriceStale),
+                meta(protocol, spotUsd, ethAmount, FinancialMath.scaleUsd(stablecoinDebtUsd),
+                        timestamp, ethPriceSource, ethPriceStale),
                 "java-service/simulation-chart-builder",
                 timestamp
         );
     }
 
     public static ChartSpec treasuryContextChart(
-            double backingUsd,
-            double issuerYieldUsd,
-            double defiNetYieldUsd,
+            BigDecimal backingUsd,
+            BigDecimal issuerYieldUsd,
+            BigDecimal defiNetYieldUsd,
             String protocol,
-            double debtUsd,
+            BigDecimal debtUsd,
             Instant generatedAt
     ) {
         String timestamp = generatedAt.toString();
@@ -215,9 +231,9 @@ public final class ChartBuilders {
 
     private static Meta meta(
             String protocol,
-            double ethPriceUsd,
-            double ethAmount,
-            double debtUsd,
+            BigDecimal ethPriceUsd,
+            BigDecimal ethAmount,
+            BigDecimal debtUsd,
             String observedAt,
             String ethPriceSource,
             boolean ethPriceStale

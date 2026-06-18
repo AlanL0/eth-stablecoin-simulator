@@ -2,6 +2,7 @@ package com.ethsimulator.market;
 
 import com.ethsimulator.blockchain.ChainlinkEthUsdReader;
 import com.ethsimulator.config.EthSimulatorProperties;
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.env.Environment;
@@ -37,7 +38,7 @@ class EthPriceServiceTest {
     @BeforeEach
     void setUp() {
         properties = new EthSimulatorProperties();
-        properties.setStaticEthPriceUsd(new BigDecimal("3800"));
+        properties.setStaticEthPriceUsd(FinancialMath.bd("3800"));
         properties.setPriceCacheTtlSeconds(60);
         cache = new EthPriceCache(FIXED_CLOCK);
     }
@@ -49,7 +50,7 @@ class EthPriceServiceTest {
         EthPriceQuote quote = service.currentPrice();
 
         assertEquals(EthPriceSource.CHAINLINK, quote.source());
-        assertEquals(3850.12, quote.priceUsd().doubleValue(), 0.01);
+        assertEquals(FinancialMath.bd("3850.12"), quote.priceUsd());
         assertFalse(quote.stale());
     }
 
@@ -69,7 +70,7 @@ class EthPriceServiceTest {
             EthPriceQuote quote = service.currentPrice();
 
             assertEquals(EthPriceSource.PUBLIC_API, quote.source());
-            assertEquals(3925.5, quote.priceUsd().doubleValue(), 0.01);
+            assertEquals(FinancialMath.bd("3925.5"), quote.priceUsd());
         } finally {
             wireMock.stop();
         }
@@ -82,7 +83,7 @@ class EthPriceServiceTest {
         EthPriceQuote quote = service.currentPrice();
 
         assertEquals(EthPriceSource.STATIC, quote.source());
-        assertEquals(3800.0, quote.priceUsd().doubleValue(), 0.01);
+        assertEquals(FinancialMath.bd("3800"), quote.priceUsd());
         assertTrue(quote.degraded());
     }
 
@@ -94,7 +95,7 @@ class EthPriceServiceTest {
         EthPriceQuote cached = service.currentPrice();
 
         assertEquals(EthPriceSource.CACHE, cached.source());
-        assertEquals(3850.0, cached.priceUsd().doubleValue(), 0.01);
+        assertEquals(FinancialMath.bd("3850.00"), cached.priceUsd());
     }
 
     @Test
@@ -115,16 +116,16 @@ class EthPriceServiceTest {
         EthPriceQuote refreshed = service.currentPrice();
 
         assertEquals(EthPriceSource.CHAINLINK, refreshed.source());
-        assertEquals(3850.0, refreshed.priceUsd().doubleValue(), 0.01);
+        assertEquals(FinancialMath.bd("3850.00"), refreshed.priceUsd());
     }
 
     @Test
     void rejectsStaleClientHintBeyondTolerance() {
         EthPriceService service = service(chainlinkReturning("3850.00"), "");
 
-        EthPriceQuote quote = service.resolvePrice(1000.0);
+        EthPriceQuote quote = service.resolvePrice(FinancialMath.bd("1000"));
 
-        assertEquals(3850.0, quote.priceUsd().doubleValue(), 0.01);
+        assertEquals(FinancialMath.bd("3850.00"), quote.priceUsd());
         assertEquals(EthPriceSource.CHAINLINK, quote.source());
         assertEquals(true, quote.stale());
     }
@@ -142,7 +143,7 @@ class EthPriceServiceTest {
     }
 
     private static ChainlinkEthUsdReader chainlinkReturning(String price) {
-        return () -> Optional.of(new BigDecimal(price));
+        return () -> Optional.of(FinancialMath.bd(price));
     }
 
     private static final class MutableClock extends Clock {

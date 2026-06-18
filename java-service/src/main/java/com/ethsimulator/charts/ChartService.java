@@ -34,8 +34,8 @@ public class ChartService {
                 resolved.deployYieldPct(),
                 resolved.years(),
                 resolved.compoundsPerYear(),
-                resolved.ethPriceDouble(),
-                resolved.ethAmountDouble(),
+                resolved.ethPrice().priceUsd(),
+                resolved.scaledEthAmount(),
                 resolved.ethPriceSourceKey(),
                 resolved.ethPrice().stale(),
                 generatedAt

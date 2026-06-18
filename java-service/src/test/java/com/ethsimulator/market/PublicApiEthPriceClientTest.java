@@ -1,5 +1,6 @@
 package com.ethsimulator.market;
 
+import com.ethsimulator.util.FinancialMath;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
@@ -39,7 +40,7 @@ class PublicApiEthPriceClientTest {
             Optional<BigDecimal> price = client(wireMock).fetchPriceUsd(wireMock.baseUrl() + "/eth-price");
 
             assertTrue(price.isPresent());
-            assertEquals(3925.5, price.get().doubleValue(), 0.01);
+            assertEquals(FinancialMath.bd("3925.5"), price.get());
         } finally {
             wireMock.stop();
         }
@@ -58,7 +59,7 @@ class PublicApiEthPriceClientTest {
             Optional<BigDecimal> price = client(wireMock).fetchPriceUsd(wireMock.baseUrl() + "/price");
 
             assertTrue(price.isPresent());
-            assertEquals(98000.0, price.get().doubleValue(), 0.01);
+            assertEquals(FinancialMath.bd("98000.0"), price.get());
         } finally {
             wireMock.stop();
         }
