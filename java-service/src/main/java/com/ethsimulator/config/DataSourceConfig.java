@@ -24,9 +24,16 @@ public class DataSourceConfig {
             throw new IllegalStateException("DATABASE_URL must be set when DataSourceConfig is active");
         }
         HikariDataSource dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(url.trim());
+        String jdbcUrl = url.trim();
+        dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setMaximumPoolSize(5);
         dataSource.setConnectionTimeout(5_000);
+        // Direct/session pooler URLs are preferred. For Supabase transaction pooler (6543),
+        // append prepareThreshold=0 only when prepared statements fail behind pgbouncer.
+        if (jdbcUrl.contains("pgbouncer=true") && !jdbcUrl.contains("prepareThreshold=")) {
+            String separator = jdbcUrl.contains("?") ? "&" : "?";
+            dataSource.setJdbcUrl(jdbcUrl + separator + "prepareThreshold=0");
+        }
         return dataSource;
     }
 }

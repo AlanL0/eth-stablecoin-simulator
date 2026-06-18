@@ -9,6 +9,9 @@ spring:
       enabled: true
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
   ai:
     openai:
       api-key: ${LLM_API_KEY:}
