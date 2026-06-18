@@ -13,6 +13,10 @@ ETH_Stablecoin_Simulator_Complete_Plan.md
 # SECRETS & SENSITIVE CONFIG (never commit)
 # Add new patterns here when the project gains accounts, keys, or credentials.
 # =============================================================================
+# Local agent orchestration (prompts, reviews, waves — never publish)
+.grok/
+project-brain/
+.cursor/
 .env
 .env.*
 !.env.example

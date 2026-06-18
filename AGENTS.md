@@ -2,13 +2,9 @@
 
 Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T41** only. Legacy ETH-T01–T15 are archived and must not be resumed.
 
-**Master context (all agents):** `.grok/prompts/_master-context.md` — institutional re-architecture system prompt. Where it conflicts with tickets below, **tickets win** (Java 25, Boot 4.1, Spring AI only).
+**Ticket tracking:** Use GitHub issues/PRs or a local PM system — do not commit ticket boards, agent prompts, or review artifacts to this public repo.
 
-**Ticket board (source of truth):** `/Users/alan/Documents/project-brain/project-brain/Projects/ethStable Coin Simulator/Tickets/_TICKETS-INDEX.md`
-
-**Active wave:** `.grok/waves/wave-3-five-ticket.md` — T17, T18, T19, T25, T26 collaborative sprint.
-
-**Baseline:** T16 complete (`e1ad97c`). Next: Wave 3 Stage 1 → **ETH-T17**.
+**Baseline:** T16 complete (`e1ad97c`). Active phase: deterministic backend (T17–T21 done); next **ETH-T22** (Spring AI orchestration).
 
 ## Immutable rules
 
@@ -44,7 +40,7 @@ Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T41** only. Le
 | Wave | Tickets | Parallel? |
 |---|---|---|
 | 1 | T16 | Done |
-| 3 (active) | T17 → T18∥T19 → T25 → T26 | Staged — see `.grok/waves/wave-3-five-ticket.md` |
+| 3 | T17 → T18∥T19 → T25 → T26 | Done |
 | 4+ | T20–T22, T24… | Per index |
 | 4 | T20 → T21; T25 when T17+T18 done; T26 when T19–T21 done | Partial |
 | 5 | T22 → T23 → T24 | Sequential core |
@@ -64,7 +60,7 @@ When running parallel roles, the **parent session is the orchestrator**. It does
 | Frontend | `frontend` | `frontend/` | `worktree` | `all` |
 | Staff Engineer | `staff-engineer` | Code review before QA | shared | `read-only` |
 | QA | `qa` | **Runs** acceptance gates in shell (`mvn test`, scans) | shared | `all` — **never read-only** |
-| Product Mgmt | `pm` | `project-brain/` tickets only | shared | `read-write` |
+| Product Mgmt | `pm` | Ticket closeout (external tracker) | shared | `read-write` |
 | UI/UX | `ui-ux` | `frontend/` layout, copy, a11y | `worktree` when implementing | `all` |
 
 ### Spawn convention
@@ -90,7 +86,7 @@ PM (unblocked?) → Backend/Frontend (implement) → Staff Engineer (review)
 
 | Step | Gate to proceed |
 |---|---|
-| Staff Engineer | Verdict **APPROVED** (zero blockers) — review file at `.grok/reviews/ETH-T<n>-review.md` |
+| Staff Engineer | Verdict **APPROVED** (zero blockers) — review notes kept locally, not in repo |
 | QA | **PASS** with command output (`mvn -q test` exit 0, scans clean) |
 | PM | Both above green; then update verification log + archive |
 
@@ -106,7 +102,7 @@ PM (unblocked?) → Backend/Frontend (implement) → Staff Engineer (review)
 1. Staff Engineer **APPROVED** on the worktree branch.
 2. QA runs acceptance gate on the same branch **before** merge.
 3. Orchestrator merges worktree → main only after both pass.
-4. PM updates ticket status only after review file + QA evidence are attached.
+4. PM updates external ticket status only after Staff Engineer APPROVED + QA PASS evidence.
 
 ## Monitoring progress (no separate web dashboard)
 

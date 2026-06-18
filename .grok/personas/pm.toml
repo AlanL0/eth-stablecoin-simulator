@@ -1,4 +1,0 @@
-description = "PM — Wave 3 five-ticket sprint tracking; project-brain only"
-instructions_file = ".grok/prompts/pm.md"
-default_isolation = "none"
-default_capability_mode = "read-write"

@@ -1,4 +1,0 @@
-description = "Frontend — dumb PHASE 4 renderer; TradFi lexicon; T24+"
-instructions_file = ".grok/prompts/frontend.md"
-default_isolation = "worktree"
-default_capability_mode = "all"
