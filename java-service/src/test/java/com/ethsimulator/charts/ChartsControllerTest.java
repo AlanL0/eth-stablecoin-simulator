@@ -47,8 +47,9 @@ class ChartsControllerTest {
                         .param("years", "1")
                         .param("compoundsPerYear", "12"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.schemaVersion", is("2.0")))
                 .andExpect(jsonPath("$.chartId", is("simulation_yield_projection")))
-                .andExpect(jsonPath("$.meta.sources[0].source", is("chainlink")));
+                .andExpect(jsonPath("$.provenance.sources[0].source", is("chainlink")));
     }
 
     @Test
@@ -58,10 +59,11 @@ class ChartsControllerTest {
                         .param("protocol", "maker_sky")
                         .param("ethPriceUsd", "1000"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.schemaVersion", is("2.0")))
                 .andExpect(jsonPath("$.chartId", is("liquidation_price_band")))
-                .andExpect(jsonPath("$.meta.ethPriceUsd", is("3850")))
-                .andExpect(jsonPath("$.meta.sources[0].source", is("chainlink")))
-                .andExpect(jsonPath("$.meta.sources[0].stale", is(true)))
+                .andExpect(jsonPath("$.assumptions.ethPriceUsd", is("3850")))
+                .andExpect(jsonPath("$.provenance.sources[0].source", is("chainlink")))
+                .andExpect(jsonPath("$.provenance.sources[0].stale", is(true)))
                 .andExpect(jsonPath("$.annotations[0].label", is("ETH spot (Chainlink)")));
     }
 
@@ -71,7 +73,25 @@ class ChartsControllerTest {
                         .param("ethAmount", "2")
                         .param("protocol", "maker_sky"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.schemaVersion", is("2.0")))
                 .andExpect(jsonPath("$.chartId", is("health_ratio_sweep")))
-                .andExpect(jsonPath("$.series[0].points[2].y", is("1.2")));
+                .andExpect(jsonPath("$.series[0].data[2].displayValue", is("1.2")));
+    }
+
+    @Test
+    void protocolRatesEndpoint() throws Exception {
+        mockMvc.perform(get("/api/charts/protocol-rates").param("asset", "USDC"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.schemaVersion", is("2.0")))
+                .andExpect(jsonPath("$.chartId", is("protocol_rates_comparison")));
+    }
+
+    @Test
+    void ethPriceHistoryEndpoint() throws Exception {
+        mockMvc.perform(get("/api/charts/eth-price-history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.schemaVersion", is("2.0")))
+                .andExpect(jsonPath("$.chartId", is("eth_price_history")))
+                .andExpect(jsonPath("$.series[0].data[0].displayValue", is("3521.445678901234567890")));
     }
 }

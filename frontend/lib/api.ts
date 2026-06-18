@@ -3,11 +3,17 @@ import type { components as JavaComponents, paths as JavaPaths } from "./generat
 
 export type SimulationRequest = JavaComponents["schemas"]["SimulationRequest"];
 export type SimulationResponse = JavaComponents["schemas"]["SimulationResponse"];
-export type ChartSpecV1 = JavaComponents["schemas"]["ChartSpecV1"];
+export type ChartContract = JavaComponents["schemas"]["ChartContract"];
+/** @deprecated ChartSpecV1 removed in ETH-T18 — use ChartContract */
+export type ChartSpecV1 = ChartContract;
 export type EthPriceResponse = JavaComponents["schemas"]["EthPriceResponse"];
 export type WalletStablecoinsResponse = JavaComponents["schemas"]["WalletStablecoinsResponse"];
 export type AuditResponse = JavaComponents["schemas"]["AuditResponse"];
-export type ErrorResponse = JavaComponents["schemas"]["ErrorResponse"];
+export type ErrorResponse = {
+  code: string;
+  message: string;
+  details?: string[];
+};
 
 export type RecommendYieldRequest = AgentComponents["schemas"]["RecommendYieldRequest"];
 export type RecommendYieldResponse = AgentComponents["schemas"]["RecommendYieldResponse"];

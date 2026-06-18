@@ -1,6 +1,6 @@
 "use client";
 
-import type { ChartSpecV1 } from "@/lib/api";
+import type { ChartContract } from "@/lib/api";
 import { formatAxisValue } from "@/lib/format";
 import {
   Area,
@@ -21,27 +21,34 @@ import { colorWithOpacity, severityColor, strokeForToken } from "./colorTokens";
 
 type ChartPointRow = Record<string, string | number | null>;
 
-function hasRenderablePoints(spec: ChartSpecV1): boolean {
-  return spec.series.some((series) => series.points.length > 0);
+function plotDomain(domain?: number[]): [number, number] | undefined {
+  if (!domain || domain.length < 2) return undefined;
+  return [domain[0], domain[1]];
 }
 
-function toRows(spec: ChartSpecV1): ChartPointRow[] {
+function hasRenderablePoints(spec: ChartContract): boolean {
+  return spec.series.some((series) => series.data.length > 0);
+}
+
+function toRows(spec: ChartContract): ChartPointRow[] {
   const xValues = new Set<string | number>();
   for (const series of spec.series) {
-    for (const point of series.points) {
+    for (const point of series.data) {
       xValues.add(point.x as string | number);
     }
   }
   const rows: ChartPointRow[] = Array.from(xValues).map((x) => ({ x }));
   for (const series of spec.series) {
-    for (const point of series.points) {
+    const geometry = series.style?.geometry ?? "line";
+    for (const point of series.data) {
       const row = rows.find((entry) => entry.x === point.x);
       if (!row) continue;
-      if (series.geometry === "band") {
-        row[`${series.id}_y0`] = point.y0 ?? null;
-        row[`${series.id}_y1`] = point.y1 ?? null;
+      if (geometry === "band") {
+        const metadata = point.metadata as { plotValueEnd?: number } | undefined;
+        row[`${series.id}_y0`] = Number(point.plotValue) ?? null;
+        row[`${series.id}_y1`] = metadata?.plotValueEnd ?? null;
       } else {
-        row[series.id] = point.y ?? null;
+        row[series.id] = Number(point.plotValue) ?? null;
       }
     }
   }
@@ -59,41 +66,37 @@ function strokeDash(style?: { strokeDash?: string }): string | undefined {
   }
 }
 
-function renderAnnotations(spec: ChartSpecV1) {
+function renderAnnotations(spec: ChartContract) {
   return (spec.annotations ?? []).map((annotation) => {
     const color = severityColor(annotation.severity);
-    if (annotation.kind === "horizontal_line" && typeof annotation.value === "number") {
+    if (annotation.kind === "horizontal_line" && annotation.plotValue != null) {
       return (
         <ReferenceLine
           key={annotation.id}
-          y={annotation.value}
+          y={Number(annotation.plotValue)}
           stroke={color}
           strokeDasharray="4 4"
           label={annotation.label}
         />
       );
     }
-    if (annotation.kind === "vertical_line" && typeof annotation.value === "number") {
+    if (annotation.kind === "vertical_line" && annotation.plotValue != null) {
       return (
         <ReferenceLine
           key={annotation.id}
-          x={annotation.value}
+          x={Number(annotation.plotValue)}
           stroke={color}
           strokeDasharray="4 4"
           label={annotation.label}
         />
       );
     }
-    if (
-      annotation.kind === "band" &&
-      typeof annotation.value === "number" &&
-      typeof annotation.valueEnd === "number"
-    ) {
+    if (annotation.kind === "band" && annotation.plotValue != null && annotation.plotValueEnd != null) {
       return (
         <ReferenceArea
           key={annotation.id}
-          y1={annotation.value}
-          y2={annotation.valueEnd}
+          y1={Number(annotation.plotValue)}
+          y2={Number(annotation.plotValueEnd)}
           fill={color}
           fillOpacity={0.12}
           label={annotation.label}
@@ -104,42 +107,48 @@ function renderAnnotations(spec: ChartSpecV1) {
   });
 }
 
-function renderSeries(spec: ChartSpecV1) {
+function renderSeries(spec: ChartContract) {
   return spec.series.map((series) => {
+    const geometry = series.style?.geometry ?? "line";
     const color = strokeForToken(series.style?.colorToken);
     const dash = strokeDash(series.style);
-    if (series.geometry === "area") {
+    if (geometry === "area") {
       return (
         <Area
           key={series.id}
           type="monotone"
           dataKey={series.id}
-          name={series.name}
+          name={series.label}
           stroke={color}
-          fill={colorWithOpacity(series.style?.colorToken, series.style?.fillOpacity ?? 0.2)}
+          fill={colorWithOpacity(
+            series.style?.colorToken,
+            Number(series.style?.fillOpacity ?? 0.2),
+          )}
           strokeDasharray={dash}
         />
       );
     }
-    if (series.geometry === "bar") {
+    if (geometry === "bar") {
       return (
         <Bar
           key={series.id}
           dataKey={series.id}
-          name={series.name}
+          name={series.label}
           fill={color}
-          fillOpacity={series.style?.fillOpacity ?? 0.85}
+          fillOpacity={Number(series.style?.fillOpacity ?? 0.85)}
         />
       );
     }
-    if (series.geometry === "band") {
+    if (geometry === "band") {
+      const point = series.data[0];
+      const metadata = point?.metadata as { plotValueEnd?: number } | undefined;
       return (
         <ReferenceArea
           key={series.id}
-          y1={series.points[0]?.y0}
-          y2={series.points[0]?.y1}
-          fill={colorWithOpacity(series.style?.colorToken, series.style?.fillOpacity ?? 0.15)}
-          label={series.name}
+          y1={point ? Number(point.plotValue) : undefined}
+          y2={metadata?.plotValueEnd}
+          fill={colorWithOpacity(series.style?.colorToken, Number(series.style?.fillOpacity ?? 0.15))}
+          label={series.label}
         />
       );
     }
@@ -148,7 +157,7 @@ function renderSeries(spec: ChartSpecV1) {
         key={series.id}
         type="monotone"
         dataKey={series.id}
-        name={series.name}
+        name={series.label}
         stroke={color}
         strokeDasharray={dash}
         dot={false}
@@ -157,7 +166,7 @@ function renderSeries(spec: ChartSpecV1) {
   });
 }
 
-export function ChartSpecRenderer({ spec }: { spec: ChartSpecV1 }) {
+export function ChartSpecRenderer({ spec }: { spec: ChartContract }) {
   if (!hasRenderablePoints(spec)) {
     return (
       <ChartPanel spec={spec}>
@@ -170,7 +179,8 @@ export function ChartSpecRenderer({ spec }: { spec: ChartSpecV1 }) {
 
   const rows = toRows(spec);
   const isCategory = spec.xAxis.type === "category";
-  const showLegend = spec.legend?.show !== false && spec.legend?.position !== "hidden";
+  const chartType = spec.assumptions?.chartType;
+  const showLegend = chartType === "composed" || chartType === "bar";
 
   return (
     <ChartPanel spec={spec}>
@@ -180,17 +190,21 @@ export function ChartSpecRenderer({ spec }: { spec: ChartSpecV1 }) {
           <XAxis
             dataKey="x"
             type={isCategory ? "category" : "number"}
-            domain={spec.xAxis.domain as [number, number] | undefined}
+            domain={plotDomain(spec.xAxis.domain)}
             tickFormatter={(value) => formatAxisValue(value, spec.xAxis.format)}
             stroke="#94a3b8"
           />
           <YAxis
-            domain={spec.yAxis.domain as [number, number] | undefined}
+            domain={plotDomain(spec.yAxis.domain)}
             tickFormatter={(value) => formatAxisValue(value, spec.yAxis.format)}
             stroke="#94a3b8"
           />
           <Tooltip
-            formatter={(value: number) => formatAxisValue(value, spec.yAxis.format)}
+            formatter={(value: number, _name, item) => {
+              const series = spec.series.find((entry) => entry.id === String(item.dataKey));
+              const point = series?.data.find((entry) => Number(entry.plotValue) === value);
+              return point?.displayValue ?? formatAxisValue(value, spec.yAxis.format);
+            }}
             labelFormatter={(label) => formatAxisValue(label, spec.xAxis.format)}
           />
           {showLegend ? <Legend /> : null}
@@ -204,7 +218,7 @@ export function ChartSpecRenderer({ spec }: { spec: ChartSpecV1 }) {
           <tr>
             <th>{spec.xAxis.label}</th>
             {spec.series.map((series) => (
-              <th key={series.id}>{series.name}</th>
+              <th key={series.id}>{series.label}</th>
             ))}
           </tr>
         </thead>

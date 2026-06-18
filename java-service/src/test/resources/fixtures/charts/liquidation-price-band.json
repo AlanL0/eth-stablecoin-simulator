@@ -1,62 +1,71 @@
 {
-  "schemaVersion": "1.0",
-  "chartId": "liquidation_price_band",
-  "chartType": "band",
-  "title": "ETH Spot vs Liquidation Price",
-  "xAxis": {
-    "type": "category",
-    "label": "Price marker",
-    "format": "usd"
+  "schemaVersion" : "2.0",
+  "chartId" : "liquidation_price_band",
+  "title" : "ETH Spot vs Collateral Recovery Threshold",
+  "xAxis" : {
+    "type" : "category",
+    "label" : "Price marker",
+    "format" : "usd"
   },
-  "yAxis": {
-    "type": "linear",
-    "label": "USD per ETH",
-    "unit": "usd",
-    "format": "usd"
+  "yAxis" : {
+    "type" : "linear",
+    "label" : "USD per ETH",
+    "unit" : "usd",
+    "format" : "usd"
   },
-  "series": [
-    {
-      "id": "safe_band",
-      "name": "Collateral buffer",
-      "geometry": "band",
-      "points": [
-        { "x": "range", "y0": 3166.67, "y1": 3800.0 }
-      ],
-      "style": { "colorToken": "positive", "fillOpacity": 0.15 }
-    }
-  ],
-  "annotations": [
-    {
-      "id": "spot",
-      "kind": "horizontal_line",
-      "axis": "y",
-      "value": 3800,
-      "label": "ETH spot (Chainlink)",
-      "severity": "info"
+  "series" : [ {
+    "id" : "safe_band",
+    "label" : "Collateral buffer",
+    "unit" : "usd",
+    "style" : {
+      "geometry" : "band",
+      "colorToken" : "positive",
+      "fillOpacity" : 0.15
     },
-    {
-      "id": "liquidation",
-      "kind": "horizontal_line",
-      "axis": "y",
-      "value": 3166.67,
-      "label": "Liquidation price",
-      "severity": "high"
-    }
-  ],
-  "meta": {
-    "protocol": "maker_sky",
-    "ethPriceUsd": 3800,
-    "ethAmount": 2,
-    "stablecoinDebtUsd": 4222.22,
-    "sources": [
-      {
-        "field": "ethPriceUsd",
-        "source": "chainlink",
-        "observedAt": "2026-06-09T12:00:00Z",
-        "stale": false
+    "data" : [ {
+      "x" : "range",
+      "plotValue" : 3166.67,
+      "displayValue" : "3166.67",
+      "metadata" : {
+        "plotValueEnd" : 3800.00,
+        "displayValueEnd" : "3800.00",
+        "geometry" : "band"
       }
-    ]
+    } ]
+  } ],
+  "annotations" : [ {
+    "id" : "spot",
+    "kind" : "horizontal_line",
+    "axis" : "y",
+    "plotValue" : 3800.00,
+    "displayValue" : "3800.00",
+    "label" : "ETH spot (Chainlink)",
+    "severity" : "info"
+  }, {
+    "id" : "liquidation",
+    "kind" : "horizontal_line",
+    "axis" : "y",
+    "plotValue" : 3166.67,
+    "displayValue" : "3166.67",
+    "label" : "Collateral recovery threshold",
+    "severity" : "high"
+  } ],
+  "assumptions" : {
+    "chartType" : "band",
+    "protocol" : "maker_sky",
+    "ethPriceUsd" : "3800",
+    "ethAmount" : "2",
+    "stablecoinDebtUsd" : "4222.22"
   },
-  "source": "java-service/simulation-chart-builder",
-  "generatedAt": "2026-06-09T12:00:01Z"
+  "warnings" : [ ],
+  "provenance" : {
+    "builder" : "java-service/simulation-chart-builder",
+    "generatedAt" : "2026-06-09T12:00:01Z",
+    "sources" : [ {
+      "field" : "ethPriceUsd",
+      "source" : "chainlink",
+      "observedAt" : "2026-06-09T12:00:01Z",
+      "stale" : false
+    } ]
+  }
 }

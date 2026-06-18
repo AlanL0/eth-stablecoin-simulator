@@ -1,14 +1,18 @@
 package com.ethsimulator.charts;
 
+import com.ethsimulator.market.YieldQuote;
 import com.ethsimulator.simulation.SimulationEngine;
 import com.ethsimulator.util.FinancialMath;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import static com.ethsimulator.charts.ChartModels.*;
+import static com.ethsimulator.charts.ChartContract.*;
+import static com.ethsimulator.charts.ChartPoints.*;
 
 public final class ChartBuilders {
 
@@ -23,7 +27,7 @@ public final class ChartBuilders {
     private ChartBuilders() {
     }
 
-    public static ChartSpec yieldProjection(
+    public static ChartContract yieldProjection(
             String protocol,
             BigDecimal stablecoinDebtUsd,
             BigDecimal annualStabilityFeeUsd,
@@ -37,9 +41,9 @@ public final class ChartBuilders {
             Instant generatedAt
     ) {
         int totalMonths = years * 12;
-        List<Point> gross = new ArrayList<>();
-        List<Point> fees = new ArrayList<>();
-        List<Point> net = new ArrayList<>();
+        List<DataPoint> gross = new ArrayList<>();
+        List<DataPoint> fees = new ArrayList<>();
+        List<DataPoint> net = new ArrayList<>();
 
         BigDecimal ratePerPeriod = FinancialMath.divide(
                 FinancialMath.humanPercentToRate(deployYieldPct),
@@ -61,9 +65,9 @@ public final class ChartBuilders {
                     FinancialMath.bd(12),
                     FinancialMath.RATE_SCALE);
             BigDecimal netUsd = FinancialMath.subtract(grossUsd, feeUsd);
-            gross.add(Point.ofXy(m, FinancialMath.scaleUsd(grossUsd)));
-            fees.add(Point.ofXy(m, FinancialMath.scaleUsd(feeUsd)));
-            net.add(Point.ofXy(m, FinancialMath.scaleUsd(netUsd)));
+            gross.add(xyUsd(m, grossUsd));
+            fees.add(xyUsd(m, feeUsd));
+            net.add(xyUsd(m, netUsd));
         }
         if (totalMonths > 0 && gross.stream().noneMatch(p -> ((Number) p.x()).intValue() == totalMonths)) {
             int m = totalMonths;
@@ -71,40 +75,44 @@ public final class ChartBuilders {
             BigDecimal growth = FinancialMath.add(BigDecimal.ONE, ratePerPeriod).pow(periods);
             BigDecimal grossUsd = FinancialMath.multiply(stablecoinDebtUsd, FinancialMath.subtract(growth, BigDecimal.ONE));
             BigDecimal feeUsd = FinancialMath.multiply(annualStabilityFeeUsd, FinancialMath.bd(years));
-            gross.add(Point.ofXy(m, FinancialMath.scaleUsd(grossUsd)));
-            fees.add(Point.ofXy(m, FinancialMath.scaleUsd(feeUsd)));
-            net.add(Point.ofXy(m, FinancialMath.scaleUsd(FinancialMath.subtract(grossUsd, feeUsd))));
+            gross.add(xyUsd(m, grossUsd));
+            fees.add(xyUsd(m, feeUsd));
+            net.add(xyUsd(m, FinancialMath.subtract(grossUsd, feeUsd)));
         }
 
         String timestamp = generatedAt.toString();
+        List<String> warnings = ethPriceStale
+                ? List.of("ETH spot price is stale; chart uses last observed quote.")
+                : List.of();
 
-        return new ChartSpec(
-                "1.0",
+        return new ChartContract(
+                SCHEMA_VERSION,
                 "simulation_yield_projection",
-                "composed",
-                "Projected Yield vs Fees",
+                "Gross/Net Protocol Return vs Stability Fees",
                 "Based on model assumptions — not live protocol guarantees",
-                new Axis("linear", "Month", "month", "month_index",
-                        List.of(FinancialMath.bd(0), FinancialMath.bd(totalMonths)), null),
-                new Axis("linear", "Cumulative USD", "usd", "usd", null, null),
+                new ChartAxis("linear", "Month", "month", "month_index",
+                        List.of(PlotNumber.of(FinancialMath.bd(0)), PlotNumber.of(FinancialMath.bd(totalMonths))), null),
+                new ChartAxis("linear", "Cumulative USD", "usd", "usd", null, null),
                 List.of(
-                        new Series("gross_yield", "Gross yield", "area", gross,
-                                new SeriesStyle("positive", null, FinancialMath.bd("0.2"))),
-                        new Series("cumulative_fees", "Cumulative stability fees", "line", fees,
-                                new SeriesStyle("negative", "dashed", null)),
-                        new Series("net_yield", "Net yield", "line", net,
-                                new SeriesStyle("primary", null, null))
+                        new ChartSeries("gross_yield", "Gross protocol return (annualized)", "usd",
+                                new ChartSeriesStyle("area", "positive", null, FinancialMath.bd("0.2")),
+                                gross),
+                        new ChartSeries("cumulative_fees", "Cumulative stability fees", "usd",
+                                new ChartSeriesStyle("line", "negative", "dashed", null),
+                                fees),
+                        new ChartSeries("net_yield", "Net protocol return (annualized)", "usd",
+                                new ChartSeriesStyle("line", "primary", null, null),
+                                net)
                 ),
                 List.of(),
-                new Legend("bottom", true),
-                meta(protocol, ethPriceUsd, ethAmount, FinancialMath.scaleUsd(stablecoinDebtUsd),
-                        timestamp, ethPriceSource, ethPriceStale),
-                "java-service/simulation-chart-builder",
-                timestamp
+                assumptions(protocol, ethPriceUsd, ethAmount, stablecoinDebtUsd, "composed"),
+                warnings,
+                provenance("java-service/simulation-chart-builder", timestamp, ethPriceSource, ethPriceStale,
+                        "linear_annualized_v1")
         );
     }
 
-    public static ChartSpec liquidationBand(
+    public static ChartContract liquidationBand(
             String protocol,
             BigDecimal spotUsd,
             BigDecimal liquidationUsd,
@@ -116,31 +124,33 @@ public final class ChartBuilders {
             Instant generatedAt
     ) {
         String timestamp = generatedAt.toString();
+        List<String> warnings = ethPriceStale
+                ? List.of("ETH spot price is stale; collateral recovery threshold uses last observed quote.")
+                : List.of();
 
-        return new ChartSpec(
-                "1.0",
+        return new ChartContract(
+                SCHEMA_VERSION,
                 "liquidation_price_band",
-                "band",
-                "ETH Spot vs Liquidation Price",
+                "ETH Spot vs Collateral Recovery Threshold",
                 null,
-                new Axis("category", "Price marker", null, "usd", null, null),
-                new Axis("linear", "USD per ETH", "usd", "usd", null, null),
-                List.of(new Series("safe_band", "Collateral buffer", "band",
-                        List.of(Point.band("range", liquidationUsd, FinancialMath.scaleUsd(spotUsd))),
-                        new SeriesStyle("positive", null, FinancialMath.bd("0.15")))),
+                new ChartAxis("category", "Price marker", null, "usd", null, null),
+                new ChartAxis("linear", "USD per ETH", "usd", "usd", null, null),
+                List.of(new ChartSeries("safe_band", "Collateral buffer", "usd",
+                        new ChartSeriesStyle("band", "positive", null, FinancialMath.bd("0.15")),
+                        List.of(band("range", liquidationUsd, FinancialMath.scaleUsd(spotUsd))))),
                 List.of(
-                        new Annotation("spot", "horizontal_line", "y", FinancialMath.scaleUsd(spotUsd), null, spotLabel, "info"),
-                        new Annotation("liquidation", "horizontal_line", "y", liquidationUsd, null,
-                                "Liquidation price", "high")
+                        annotation("spot", "horizontal_line", "y", FinancialMath.scaleUsd(spotUsd),
+                                FinancialMath.USD_SCALE, spotLabel, "info"),
+                        annotation("liquidation", "horizontal_line", "y", liquidationUsd,
+                                FinancialMath.USD_SCALE, "Collateral recovery threshold", "high")
                 ),
-                null,
-                meta(protocol, spotUsd, ethAmount, debtUsd, timestamp, ethPriceSource, ethPriceStale),
-                "java-service/simulation-chart-builder",
-                timestamp
+                assumptions(protocol, spotUsd, ethAmount, debtUsd, "band"),
+                warnings,
+                provenance("java-service/simulation-chart-builder", timestamp, ethPriceSource, ethPriceStale, null)
         );
     }
 
-    public static ChartSpec healthRatioSweep(
+    public static ChartContract healthRatioSweep(
             String protocol,
             BigDecimal ethAmount,
             BigDecimal stablecoinDebtUsd,
@@ -150,7 +160,7 @@ public final class ChartBuilders {
             boolean ethPriceStale,
             Instant generatedAt
     ) {
-        List<Point> points = new ArrayList<>();
+        List<DataPoint> points = new ArrayList<>();
         BigDecimal minP = null;
         BigDecimal maxP = null;
         for (BigDecimal mult : HEALTH_SWEEP_MULTIPLIERS) {
@@ -158,40 +168,45 @@ public final class ChartBuilders {
             BigDecimal health = SimulationEngine.healthAtPrice(ethAmount, price, stablecoinDebtUsd, liquidationRatio);
             BigDecimal scaledPrice = FinancialMath.scaleUsd(price);
             BigDecimal scaledHealth = health.setScale(1, FinancialMath.INTERMEDIATE.getRoundingMode());
-            points.add(Point.ofXy(scaledPrice, scaledHealth));
+            points.add(xy(scaledPrice, scaledHealth, 1));
             minP = minP == null ? scaledPrice : FinancialMath.min(minP, scaledPrice);
             maxP = maxP == null ? scaledPrice : FinancialMath.max(maxP, scaledPrice);
         }
 
         String timestamp = generatedAt.toString();
+        List<String> warnings = ethPriceStale
+                ? List.of("ETH spot price is stale; collateralization sweep uses last observed quote.")
+                : List.of();
 
-        return new ChartSpec(
-                "1.0",
+        return new ChartContract(
+                SCHEMA_VERSION,
                 "health_ratio_sweep",
-                "line",
-                "Health Ratio Across ETH Prices",
+                "Collateralization Risk Margin Across ETH Prices",
                 "Single-scenario sweep at current debt and protocol assumptions",
-                new Axis("linear", "ETH price", "usd", "usd", List.of(minP, maxP), null),
-                new Axis("linear", "Health ratio", null, "number",
-                        List.of(FinancialMath.bd("0.5"), FinancialMath.bd("2.0")), null),
-                List.of(new Series("health_ratio", "Health ratio", "line", points,
-                        new SeriesStyle("primary", null, null))),
+                new ChartAxis("linear", "ETH price", "usd", "usd",
+                        List.of(PlotNumber.of(minP), PlotNumber.of(maxP)), null),
+                new ChartAxis("linear", "Collateralization risk margin", null, "number",
+                        List.of(PlotNumber.of(FinancialMath.bd("0.5")), PlotNumber.of(FinancialMath.bd("2.0"))), null),
+                List.of(new ChartSeries("collateralization_risk_margin", "Collateralization risk margin", "ratio",
+                        new ChartSeriesStyle("line", "primary", null, null),
+                        points)),
                 List.of(
-                        new Annotation("spot_marker", "vertical_line", "x", FinancialMath.scaleUsd(spotUsd), null,
-                                "Current ETH price", "info"),
-                        new Annotation("high_risk_band", "band", "y", FinancialMath.bd("0.5"),
+                        annotation("spot_marker", "vertical_line", "x", FinancialMath.scaleUsd(spotUsd),
+                                FinancialMath.USD_SCALE, "Current ETH price", "info"),
+                        annotationBand("high_risk_band", "y",
+                                FinancialMath.bd("0.5"),
                                 FinancialMath.CHART_HIGH_RISK_UPPER,
-                                "High risk zone", "high")
+                                2,
+                                "High risk zone",
+                                "high")
                 ),
-                null,
-                meta(protocol, spotUsd, ethAmount, FinancialMath.scaleUsd(stablecoinDebtUsd),
-                        timestamp, ethPriceSource, ethPriceStale),
-                "java-service/simulation-chart-builder",
-                timestamp
+                assumptions(protocol, spotUsd, ethAmount, stablecoinDebtUsd, "line"),
+                warnings,
+                provenance("java-service/simulation-chart-builder", timestamp, ethPriceSource, ethPriceStale, null)
         );
     }
 
-    public static ChartSpec treasuryContextChart(
+    public static ChartContract treasuryContextChart(
             BigDecimal backingUsd,
             BigDecimal issuerYieldUsd,
             BigDecimal defiNetYieldUsd,
@@ -201,44 +216,157 @@ public final class ChartBuilders {
     ) {
         String timestamp = generatedAt.toString();
 
-        return new ChartSpec(
-                "1.0",
+        return new ChartContract(
+                SCHEMA_VERSION,
                 "stablecoin_treasury_context",
-                "composed",
                 "Stablecoin Reserves & Treasury Context (Educational)",
                 "Your mint vs illustrative issuer reserve economics — not official fiscal data.",
-                new Axis("category", "Your simulation (USD)", null, "usd", null, null),
-                new Axis("linear", "USD", "usd", "usd", null, null),
+                new ChartAxis("category", "Your simulation (USD)", null, "usd", null, null),
+                new ChartAxis("linear", "USD", "usd", "usd", null, null),
                 List.of(
-                        new Series("treasury_backing", "Implied T-bill backing (your mint)", "bar",
-                                List.of(Point.ofXy("your_mint", backingUsd)),
-                                new SeriesStyle("secondary", null, null)),
-                        new Series("issuer_yield", "Issuer reserve yield (annual)", "bar",
-                                List.of(Point.ofXy("your_mint", issuerYieldUsd)),
-                                new SeriesStyle("positive", null, null)),
-                        new Series("your_defi_yield", "Your DeFi net yield (annual)", "bar",
-                                List.of(Point.ofXy("your_mint", defiNetYieldUsd)),
-                                new SeriesStyle("primary", null, null))
+                        new ChartSeries("treasury_backing", "Implied T-bill backing (your mint)", "usd",
+                                new ChartSeriesStyle("bar", "secondary", null, null),
+                                List.of(xyUsd("your_mint", backingUsd))),
+                        new ChartSeries("issuer_yield", "Issuer reserve yield (annual)", "usd",
+                                new ChartSeriesStyle("bar", "positive", null, null),
+                                List.of(xyUsd("your_mint", issuerYieldUsd))),
+                        new ChartSeries("your_defi_yield", "Deployed capital net return (annualized)", "usd",
+                                new ChartSeriesStyle("bar", "primary", null, null),
+                                List.of(xyUsd("your_mint", defiNetYieldUsd)))
                 ),
                 List.of(),
-                new Legend("bottom", true),
-                new Meta(null, protocol, null, null, debtUsd,
-                        List.of(new Source("tbillApyPct", "model_assumption", timestamp, false))),
-                "java-service/treasury-context-builder",
-                timestamp
+                assumptions(protocol, null, null, debtUsd, "composed"),
+                List.of(),
+                new ChartProvenance(
+                        "java-service/treasury-context-builder",
+                        timestamp,
+                        "treasury_reserve_model_v1",
+                        List.of(new ChartSource("tbillApyPct", "model_assumption", timestamp, false))
+                )
         );
     }
 
-    private static Meta meta(
+    public static ChartContract protocolRatesComparison(
+            String asset,
+            List<YieldQuote> quotes,
+            Instant generatedAt
+    ) {
+        String timestamp = generatedAt.toString();
+        List<DataPoint> points = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+
+        for (YieldQuote quote : quotes) {
+            points.add(xy(quote.protocol(), quote.apyPct(), FinancialMath.USD_SCALE));
+            if ("static_fallback".equals(quote.source())) {
+                warnings.add("Protocol return quotes use static fallback seed data.");
+            }
+            if (quote.observedAt() != null && quote.observedAt().isBefore(generatedAt.minusSeconds(3600))) {
+                warnings.add("One or more protocol return quotes may be stale.");
+            }
+        }
+
+        return new ChartContract(
+                SCHEMA_VERSION,
+                "protocol_rates_comparison",
+                "Protocol Return Comparison (Annualized)",
+                "Illustrative deployed-capital net returns by venue — not investment advice.",
+                new ChartAxis("category", "Protocol venue", null, "string", null, null),
+                new ChartAxis("linear", "Protocol return (annualized)", "percent", "percent", null, null),
+                List.of(new ChartSeries("protocol_return", "Protocol return (annualized)", "percent",
+                        new ChartSeriesStyle("bar", "primary", null, null),
+                        points)),
+                List.of(),
+                Map.of("asset", asset, "chartType", "bar"),
+                warnings,
+                new ChartProvenance(
+                        "java-service/protocol-rates-chart-builder",
+                        timestamp,
+                        "seed_catalog_v1",
+                        List.of(new ChartSource("apyPct", quotes.isEmpty() ? "static_fallback" : quotes.get(0).source(),
+                                timestamp, false))
+                )
+        );
+    }
+
+    public static ChartContract ethPriceHistory(
+            List<EthHistoryPoint> history,
+            String priceSource,
+            boolean stale,
+            Instant generatedAt
+    ) {
+        String timestamp = generatedAt.toString();
+        List<DataPoint> points = new ArrayList<>();
+        BigDecimal min = null;
+        BigDecimal max = null;
+
+        for (EthHistoryPoint point : history) {
+            BigDecimal plot = FinancialMath.scaleUsd(point.priceUsd());
+            points.add(xyUsdPreserveExact(point.observedAt(), point.priceUsd()));
+            min = min == null ? plot : FinancialMath.min(min, plot);
+            max = max == null ? plot : FinancialMath.max(max, plot);
+        }
+
+        List<String> warnings = stale
+                ? List.of("ETH price history includes stale terminal observation.")
+                : List.of();
+
+        return new ChartContract(
+                SCHEMA_VERSION,
+                "eth_price_history",
+                "ETH/USD Price History",
+                "Deterministic seed history for educational context — not a live market data feed.",
+                new ChartAxis("time", "Observation time", null, "iso8601", null, null),
+                new ChartAxis("linear", "USD per ETH", "usd", "usd",
+                        min != null && max != null ? List.of(PlotNumber.of(min), PlotNumber.of(max)) : null, null),
+                List.of(new ChartSeries("eth_spot", "ETH spot (USD)", "usd",
+                        new ChartSeriesStyle("line", "primary", null, null),
+                        points)),
+                List.of(),
+                Map.of("chartType", "line"),
+                warnings,
+                provenance("java-service/eth-price-history-builder", timestamp, priceSource, stale, "seed_history_v1")
+        );
+    }
+
+    public record EthHistoryPoint(String observedAt, BigDecimal priceUsd) {
+    }
+
+    private static Map<String, String> assumptions(
             String protocol,
             BigDecimal ethPriceUsd,
             BigDecimal ethAmount,
             BigDecimal debtUsd,
-            String observedAt,
-            String ethPriceSource,
-            boolean ethPriceStale
+            String chartType
     ) {
-        return new Meta(null, protocol, ethPriceUsd, ethAmount, debtUsd,
-                List.of(new Source("ethPriceUsd", ethPriceSource, observedAt, ethPriceStale)));
+        Map<String, String> map = new LinkedHashMap<>();
+        map.put("chartType", chartType);
+        if (protocol != null) {
+            map.put("protocol", protocol);
+        }
+        if (ethPriceUsd != null) {
+            map.put("ethPriceUsd", ethPriceUsd.toPlainString());
+        }
+        if (ethAmount != null) {
+            map.put("ethAmount", ethAmount.toPlainString());
+        }
+        if (debtUsd != null) {
+            map.put("stablecoinDebtUsd", debtUsd.toPlainString());
+        }
+        return map;
+    }
+
+    private static ChartProvenance provenance(
+            String builder,
+            String generatedAt,
+            String ethPriceSource,
+            boolean ethPriceStale,
+            String methodology
+    ) {
+        return new ChartProvenance(
+                builder,
+                generatedAt,
+                methodology,
+                List.of(new ChartSource("ethPriceUsd", ethPriceSource, generatedAt, ethPriceStale))
+        );
     }
 }
