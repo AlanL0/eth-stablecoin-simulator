@@ -1,4 +1,5 @@
-description = "QA — independent gates, T25/T26/T27/T28/T40 verification"
+description = "QA — runs acceptance gates in shell (mvn test, scans); never read-only"
 instructions_file = ".grok/prompts/qa.md"
 default_isolation = "none"
-default_capability_mode = "execute"
+default_capability_mode = "all"
+reasoning_effort = "high"

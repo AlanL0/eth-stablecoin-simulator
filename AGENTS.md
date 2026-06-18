@@ -54,31 +54,55 @@ When running parallel roles, the **parent session is the orchestrator**. It does
 
 ### Role assignment
 
-| Role | Persona | Scope | Isolation |
-|---|---|---|---|
-| Backend | `backend` | `java-service/`, `db/`, scripts touching Java | `worktree` |
-| Frontend | `frontend` | `frontend/` | `worktree` |
-| QA | `qa` | Tests, acceptance gates, scans | shared (no edits unless fixing gate) |
-| Product Mgmt | `pm` | `project-brain/` tickets only | shared, read-only |
-| UI/UX | `ui-ux` | `frontend/` layout, copy, a11y | `worktree` when implementing |
+| Role | Persona | Scope | Isolation | Capability |
+|---|---|---|---|---|
+| Backend | `backend` | `java-service/`, `db/`, scripts touching Java | `worktree` | `all` |
+| Frontend | `frontend` | `frontend/` | `worktree` | `all` |
+| Staff Engineer | `staff-engineer` | Code review before QA | shared | `read-only` |
+| QA | `qa` | **Runs** acceptance gates in shell (`mvn test`, scans) | shared | `all` — **never read-only** |
+| Product Mgmt | `pm` | `project-brain/` tickets only | shared | `read-write` |
+| UI/UX | `ui-ux` | `frontend/` layout, copy, a11y | `worktree` when implementing | `all` |
 
 ### Spawn convention
 
 Prefix subagent `description` with the role tag so the tasks pane shows it:
 
 ```
-[Backend] ETH-T16 purge Python foundation
-[QA] Run T16 acceptance gate
-[PM] Update verification log for T16
+[Backend] ETH-T17 strict BigDecimal engine
+[Staff Engineer] Review ETH-T17 commits
+[QA] Run T17 acceptance gate (mvn test in shell)
+[PM] Update verification log for T17
 ```
 
 Use `background: true` and `isolation: worktree` for parallel implementers. Never run two write-capable subagents on the same paths without worktree isolation.
 
+### Ticket completion pipeline (mandatory order)
+
+```
+PM (unblocked?) → Backend/Frontend (implement) → Staff Engineer (review)
+    → [if CHANGES_REQUESTED: Backend fixes → re-review]
+    → QA (run gates in shell) → PM (closeout)
+```
+
+| Step | Gate to proceed |
+|---|---|
+| Staff Engineer | Verdict **APPROVED** (zero blockers) — review file at `.grok/reviews/ETH-T<n>-review.md` |
+| QA | **PASS** with command output (`mvn -q test` exit 0, scans clean) |
+| PM | Both above green; then update verification log + archive |
+
+**Orchestrator rules:**
+
+- Never spawn QA with `readonly: true` or `capability_mode: read-only` — QA must execute `mvn test`.
+- Never trust implementer or orchestrator gate claims — only QA shell output counts.
+- Never spawn PM closeout before Staff Engineer **APPROVED** and QA **PASS**.
+- Orchestrator may verify informally but cannot substitute for QA.
+
 ### Merge discipline
 
-1. QA subagent runs acceptance gate on the worktree branch **before** merge.
-2. Orchestrator merges worktree → main only after gate passes.
-3. PM updates ticket status only after QA evidence is attached.
+1. Staff Engineer **APPROVED** on the worktree branch.
+2. QA runs acceptance gate on the same branch **before** merge.
+3. Orchestrator merges worktree → main only after both pass.
+4. PM updates ticket status only after review file + QA evidence are attached.
 
 ## Monitoring progress (no separate web dashboard)
 

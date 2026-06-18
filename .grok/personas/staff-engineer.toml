@@ -1,0 +1,5 @@
+description = "Staff Engineer — mandatory code review before QA (immutable rules, scope)"
+instructions_file = ".grok/prompts/staff-engineer.md"
+default_isolation = "none"
+default_capability_mode = "read-only"
+reasoning_effort = "high"
