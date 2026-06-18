@@ -1,0 +1,4 @@
+description = "Orchestrator — wave planning, parallel subagent coordination, merge discipline"
+instructions_file = ".grok/prompts/orchestrator.md"
+default_isolation = "none"
+default_capability_mode = "all"

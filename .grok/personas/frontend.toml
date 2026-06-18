@@ -1,0 +1,4 @@
+description = "Frontend — Next.js rendering-only institutional UI (ETH-T24+)"
+instructions_file = ".grok/prompts/frontend.md"
+default_isolation = "worktree"
+default_capability_mode = "all"

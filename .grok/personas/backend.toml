@@ -1,0 +1,4 @@
+description = "Backend — java-service, db, Spring Boot re-architecture (ETH-T16–T23)"
+instructions_file = ".grok/prompts/backend.md"
+default_isolation = "worktree"
+default_capability_mode = "all"
