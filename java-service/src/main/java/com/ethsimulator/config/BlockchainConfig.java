@@ -11,6 +11,7 @@ import com.ethsimulator.blockchain.Web3jErc20BalanceReader;
 import com.ethsimulator.blockchain.Web3jTransferEventFetcher;
 import okhttp3.OkHttpClient;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -25,15 +26,9 @@ import java.util.concurrent.TimeUnit;
 public class BlockchainConfig {
 
     @Bean
+    @ConditionalOnExpression("T(com.ethsimulator.config.BlockchainConfig).hasHttpRpcUrl(@environment)")
     public Web3j web3j(Environment environment, EthSimulatorProperties properties) {
-        String rpcUrl = resolveRpcUrl(environment);
-        if (!StringUtils.hasText(rpcUrl)) {
-            return null;
-        }
-        String trimmed = rpcUrl.trim();
-        if (trimmed.startsWith("ws://") || trimmed.startsWith("wss://")) {
-            return null;
-        }
+        String trimmed = resolveRpcUrl(environment).trim();
         OkHttpClient client = rpcHttpClient(properties);
         return Web3j.build(new HttpService(trimmed, client));
     }
@@ -94,6 +89,15 @@ public class BlockchainConfig {
             rpcUrl = environment.getProperty("ETH_RPC_URL");
         }
         return rpcUrl;
+    }
+
+    public static boolean hasHttpRpcUrl(Environment environment) {
+        String rpcUrl = resolveRpcUrl(environment);
+        if (!StringUtils.hasText(rpcUrl)) {
+            return false;
+        }
+        String trimmed = rpcUrl.trim();
+        return !trimmed.startsWith("ws://") && !trimmed.startsWith("wss://");
     }
 
     private static OkHttpClient rpcHttpClient(EthSimulatorProperties properties) {
