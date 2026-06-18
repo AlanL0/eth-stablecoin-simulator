@@ -3,7 +3,7 @@
 exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
 <div>
   <section
-    aria-label="Health Ratio Across ETH Prices"
+    aria-label="Collateralization Risk Margin Across ETH Prices"
     class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
   >
     <header
@@ -12,7 +12,7 @@ exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
       <h3
         class="text-lg font-semibold text-slate-100"
       >
-        Health Ratio Across ETH Prices
+        Collateralization Risk Margin Across ETH Prices
       </h3>
       <p
         class="mt-1 text-sm text-slate-400"
@@ -31,7 +31,7 @@ exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
         class="sr-only"
       >
         <caption>
-          Health Ratio Across ETH Prices
+          Collateralization Risk Margin Across ETH Prices
         </caption>
         <thead>
           <tr>
@@ -39,7 +39,7 @@ exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
               ETH price
             </th>
             <th>
-              Health ratio
+              Collateralization risk margin
             </th>
           </tr>
         </thead>
@@ -110,7 +110,7 @@ exports[`ChartSpecRenderer > matches snapshot for health-ratio-sweep 1`] = `
 exports[`ChartSpecRenderer > matches snapshot for liquidation-price-band 1`] = `
 <div>
   <section
-    aria-label="ETH Spot vs Liquidation Price"
+    aria-label="ETH Spot vs Collateral Recovery Threshold"
     class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
   >
     <header
@@ -119,7 +119,7 @@ exports[`ChartSpecRenderer > matches snapshot for liquidation-price-band 1`] = `
       <h3
         class="text-lg font-semibold text-slate-100"
       >
-        ETH Spot vs Liquidation Price
+        ETH Spot vs Collateral Recovery Threshold
       </h3>
     </header>
     <div
@@ -133,7 +133,7 @@ exports[`ChartSpecRenderer > matches snapshot for liquidation-price-band 1`] = `
         class="sr-only"
       >
         <caption>
-          ETH Spot vs Liquidation Price
+          ETH Spot vs Collateral Recovery Threshold
         </caption>
         <thead>
           <tr>
@@ -178,7 +178,7 @@ exports[`ChartSpecRenderer > matches snapshot for liquidation-price-band 1`] = `
 exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`] = `
 <div>
   <section
-    aria-label="Projected Yield vs Fees"
+    aria-label="Gross/Net Protocol Return vs Stability Fees"
     class="rounded-xl border border-slate-700 bg-surface-card p-4 shadow-sm"
   >
     <header
@@ -187,7 +187,7 @@ exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`
       <h3
         class="text-lg font-semibold text-slate-100"
       >
-        Projected Yield vs Fees
+        Gross/Net Protocol Return vs Stability Fees
       </h3>
       <p
         class="mt-1 text-sm text-slate-400"
@@ -206,7 +206,7 @@ exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`
         class="sr-only"
       >
         <caption>
-          Projected Yield vs Fees
+          Gross/Net Protocol Return vs Stability Fees
         </caption>
         <thead>
           <tr>
@@ -214,13 +214,13 @@ exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`
               Month
             </th>
             <th>
-              Gross yield
+              Gross protocol return (annualized)
             </th>
             <th>
               Cumulative stability fees
             </th>
             <th>
-              Net yield
+              Net protocol return (annualized)
             </th>
           </tr>
         </thead>
@@ -244,7 +244,7 @@ exports[`ChartSpecRenderer > matches snapshot for simulation-yield-projection 1`
               6
             </td>
             <td>
-              106.67
+              106.66
             </td>
             <td>
               105.56

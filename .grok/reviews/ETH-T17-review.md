@@ -3,17 +3,17 @@
 | Field | Value |
 |---|---|
 | **Ticket** | ETH-T17 — Strict BigDecimal financial engine |
-| **Branch** | `feat/t17` |
-| **Commit** | `ea49d77617ce0422fddd4a3ca2d6b54946fcdd9b` |
-| **Base** | `main` @ `5434c9733c15cc8d4f6a4a286212b8c0e9bd8708` |
+| **Branch** | `main` (merged from `feat/t17`) |
+| **Commit** | `ea49d77` |
+| **Re-verified** | 2026-06-18 @ `main` |
 | **Reviewer** | Staff Engineer |
-| **Date** | 2026-06-18 |
+| **Grade** | **B+** |
 
 ## Verdict
 
 **APPROVED** — **0 blockers**
 
-QA may proceed to the T17 acceptance gate on `feat/t17`.
+QA PASS on `main`: `make java-test` 181/0; float scan empty; `PrecisionQaTest` green.
 
 ## Immutable constraints
 
