@@ -36,7 +36,7 @@ final class ChartPoints {
         BigDecimal lowerPlot = FinancialMath.scaleUsd(lowerExact);
         BigDecimal upperPlot = FinancialMath.scaleUsd(upperExact);
         Map<String, Object> metadata = new LinkedHashMap<>();
-        metadata.put("plotValueEnd", upperPlot);
+        metadata.put("plotValueEnd", PlotNumber.of(upperPlot));
         metadata.put("displayValueEnd", upperExact.toPlainString());
         metadata.put("geometry", "band");
         return new DataPoint(x, lowerPlot, lowerExact.toPlainString(), null, metadata);
