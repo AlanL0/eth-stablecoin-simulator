@@ -2,20 +2,22 @@ package com.ethsimulator.ingestion;
 
 import com.ethsimulator.protocol.rpc.EthCallClient;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import javax.sql.DataSource;
+import org.web3j.protocol.Web3j;
 
 @Configuration
 @EnableScheduling
 @EnableConfigurationProperties(IngestionProperties.class)
-@ConditionalOnBean(DataSource.class)
+@ConditionalOnExpression(
+        "T(org.springframework.util.StringUtils).hasText('${DATABASE_URL:}')"
+                + " && T(com.ethsimulator.config.BlockchainConfig).hasHttpRpcUrl(@environment)"
+)
 public class IngestionConfig {
 
     @Bean
@@ -24,9 +26,12 @@ public class IngestionConfig {
     }
 
     @Bean
-    @ConditionalOnBean(EthCallClient.class)
-    public FinalizedBlockReader finalizedBlockReader(EthCallClient ethCallClient) {
-        return new Web3jFinalizedBlockReader(ethCallClient);
+    public FinalizedBlockReader finalizedBlockReader(ObjectProvider<Web3j> web3jProvider) {
+        Web3j web3j = web3jProvider.getIfAvailable();
+        if (web3j == null) {
+            throw new IllegalStateException("Web3j is required when ingestion is enabled");
+        }
+        return new Web3jFinalizedBlockReader(new EthCallClient(web3j));
     }
 
     @Bean

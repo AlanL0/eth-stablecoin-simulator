@@ -1,16 +1,17 @@
 package com.ethsimulator.ingestion;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.web3j.protocol.websocket.WebSocketService;
-
-import javax.sql.DataSource;
 import java.util.UUID;
 
 @Component
-@ConditionalOnBean(DataSource.class)
+@ConditionalOnExpression(
+        "T(org.springframework.util.StringUtils).hasText('${DATABASE_URL:}')"
+                + " && T(com.ethsimulator.config.BlockchainConfig).hasHttpRpcUrl(@environment)"
+)
 public class IngestionScheduler {
 
     private final IngestionProperties properties;

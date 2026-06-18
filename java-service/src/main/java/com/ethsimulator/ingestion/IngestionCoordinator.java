@@ -11,10 +11,8 @@ import com.ethsimulator.protocol.rpc.EthBlockHeader;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
-
-import javax.sql.DataSource;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -24,7 +22,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Component
-@ConditionalOnBean(DataSource.class)
+@ConditionalOnExpression(
+        "T(org.springframework.util.StringUtils).hasText('${DATABASE_URL:}')"
+                + " && T(com.ethsimulator.config.BlockchainConfig).hasHttpRpcUrl(@environment)"
+)
 public class IngestionCoordinator {
 
     private static final Logger log = LoggerFactory.getLogger(IngestionCoordinator.class);
