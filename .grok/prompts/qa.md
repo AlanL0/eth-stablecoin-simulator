@@ -15,6 +15,17 @@ cd frontend && npm test           # Frontend tickets
 
 If shell is unavailable → **FAIL immediately**. Paste exit codes and surefire/test output.
 
+**User-reproducible gate:** Run the same command a developer uses:
+
+```bash
+# From repo root (preferred)
+make java-test
+# OR
+./scripts/java-test.sh
+```
+
+Output must include `BUILD SUCCESS`. If only `mvn -q test` was run from `java-service/`, also confirm the command and cwd in the report. A passing gate that the user cannot reproduce is **FAIL**.
+
 ## Prerequisites
 
 - Staff Engineer verdict **APPROVED** at `.grok/reviews/ETH-T<n>-review.md`

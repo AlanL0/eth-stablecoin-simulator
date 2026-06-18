@@ -68,8 +68,8 @@ test: sync-fixtures ## Run Java and frontend test suites
 java-build: ## Build Java service (skip tests)
 	@cd $(JAVA_DIR) && mvn -q package -DskipTests
 
-java-test: sync-fixtures ## Run Java unit/integration tests
-	@cd $(JAVA_DIR) && mvn -q test
+java-test: sync-fixtures ## Run Java unit/integration tests (Java 25; not bare mvn at repo root)
+	@./scripts/java-test.sh -q
 
 java-run: env sync-fixtures ## Run Java API on :$(JAVA_PORT) (foreground)
 	@$(WITH_ENV) cd $(JAVA_DIR) && mvn -q spring-boot:run

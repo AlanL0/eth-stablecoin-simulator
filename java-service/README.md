@@ -22,12 +22,28 @@ make curl-sim       # POST sample simulation
 make dev-build      # Docker: postgres + java-service
 ```
 
-Or locally (Java 25 required):
+Or locally (**Java 25 required**, must run inside `java-service/`):
 
 ```bash
-mvn test
-mvn spring-boot:run
+cd java-service && mvn test
+cd java-service && mvn spring-boot:run
 ```
+
+From repo root (recommended):
+
+```bash
+make java-test
+./scripts/java-test.sh
+```
+
+### Troubleshooting `mvn test`
+
+| Error | Cause | Fix |
+|---|---|---|
+| `no POM in this directory` | Ran `mvn test` from repo root | `cd java-service && mvn test` or `make java-test` |
+| `release version 25 not supported` / wrong Java | Terminal uses Java 21 or 17 | `export JAVA_HOME=$(brew --prefix openjdk@25)/libexec/openjdk.jdk/Contents/Home` |
+| Enforcer: `Java 25 LTS required` | Same as above | Run `./scripts/check-java.sh` for setup hints |
+| `EthRpcConfigLiveTest` skipped | Normal without `ETH_RPC_URL` | Not a failure (1 skipped expected) |
 
 Default port: `8080`
 
