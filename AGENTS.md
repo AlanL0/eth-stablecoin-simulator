@@ -1,6 +1,6 @@
 # ethStable Coin Simulator — Agent Instructions
 
-Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T41** only. Legacy ETH-T01–T15 are archived and must not be resumed.
+Re-architecture reset: **2026-06-18**. Active work is **ETH-T16–T54** only (T42–T54 are the 2026-07-01 hardening wave). Legacy ETH-T01–T15 are archived and must not be resumed.
 
 **Ticket tracking:** Use GitHub issues/PRs or a local PM system — do not commit ticket boards, agent prompts, or review artifacts to this public repo.
 
