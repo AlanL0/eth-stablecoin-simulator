@@ -66,6 +66,7 @@ public class FixedIncomeAnalyticsTools {
         return yieldService.getYields(asset == null ? "USDC" : asset);
     }
 
+    // TODO(T39): wrap tool outputs before exposing to the model; avoid leaking persistence entities.
     @Tool(description = """
             Fetch rate history for a protocol/product/side triple from the ingested read model.
             Returns an empty list when persistence is unavailable.""")

@@ -94,10 +94,9 @@ public class AgentOrchestratorService {
 
         int maxTurns = Math.max(1, agentAiProperties.getMaxTurns());
         for (int turn = 0; turn < maxTurns; turn++) {
-            ToolCallingChatOptions options = ToolCallingChatOptions.builder()
-                    .toolCallbacks(List.of(toolCallbacks))
-                    .build();
-            ChatResponse response = chatModel.call(new Prompt(conversation, options));
+            // Spring AI 2.0: ChatModel.call returns tool-call responses only; execution stays here.
+            // Do not route this flow through ChatClient's auto-registered ToolCallingAdvisor.
+            ChatResponse response = chatModel.call(new Prompt(conversation, toolCallingOptions(toolCallbacks)));
             Generation generation = response.getResult();
             AssistantMessage assistantMessage = generation.getOutput();
             conversation.add(assistantMessage);
@@ -143,6 +142,12 @@ public class AgentOrchestratorService {
                 traceId,
                 "spring-ai"
         );
+    }
+
+    private static ToolCallingChatOptions toolCallingOptions(ToolCallback[] toolCallbacks) {
+        return ToolCallingChatOptions.builder()
+                .toolCallbacks(List.of(toolCallbacks))
+                .build();
     }
 
     private ChartContract extractChart(String toolResultJson) {

@@ -1,6 +1,8 @@
 package com.ethsimulator.agent;
 
 import com.ethsimulator.agent.dto.AgentAnalyzeRequest;
+import com.ethsimulator.agent.support.AutoToolExecutingChatModel;
+import com.ethsimulator.agent.support.ProviderShapedChatModel;
 import com.ethsimulator.agent.support.ScriptedChatModel;
 import com.ethsimulator.agent.tools.FixedIncomeAnalyticsTools;
 import com.ethsimulator.config.AgentAiProperties;
@@ -58,6 +60,50 @@ class AgentOrchestratorServiceTest {
         assertThat(response.toolProvenance()).hasSize(1);
         assertThat(response.toolProvenance().getFirst().toolName()).isEqualTo("getLatestYields");
         assertThat(response.traceId()).isEqualTo("trace-1");
+    }
+
+    @Test
+    void providerShapedModelLeavesToolExecutionToOrchestrator() {
+        ProviderShapedChatModel providerModel = new ProviderShapedChatModel();
+        providerModel.enqueue(toolCallResponse("getLatestYields", "{\"asset\":\"USDC\"}"));
+        providerModel.enqueue(textResponse("USDC yields are authoritative from Java tools."));
+        AgentAiProperties properties = new AgentAiProperties();
+        properties.setEnabled(true);
+        properties.setMaxTurns(3);
+        AgentOrchestratorService providerBacked = new AgentOrchestratorService(
+                providerModel,
+                analyticsTools,
+                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
+                properties,
+                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
+        );
+
+        var response = providerBacked.analyze(new AgentAnalyzeRequest("Compare USDC yields", "provider-shaped"));
+
+        assertThat(providerModel.callCount()).isEqualTo(2);
+        assertThat(providerModel.toolCallbacksObserved()).isTrue();
+        assertThat(response.toolProvenance()).hasSize(1);
+        assertThat(response.toolProvenance().getFirst().toolName()).isEqualTo("getLatestYields");
+        assertThat(response.narrative()).contains("authoritative");
+    }
+
+    @Test
+    void autoExecutingChatModelBypassesManualProvenance() {
+        AgentAiProperties properties = new AgentAiProperties();
+        properties.setEnabled(true);
+        properties.setMaxTurns(3);
+        AgentOrchestratorService autoExecuting = new AgentOrchestratorService(
+                new AutoToolExecutingChatModel(),
+                analyticsTools,
+                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
+                properties,
+                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
+        );
+
+        var response = autoExecuting.analyze(new AgentAnalyzeRequest("Compare USDC yields", "auto-exec"));
+
+        assertThat(response.toolProvenance()).isEmpty();
+        assertThat(response.narrative()).contains("Auto-executed");
     }
 
     @Test
