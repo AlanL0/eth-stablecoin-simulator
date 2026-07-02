@@ -25,7 +25,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final List<String> LIMITED_PREFIXES = List.of(
             "/api/audit/",
             "/api/wallet/",
-            "/agent/"
+            "/agent/",
+            "/api/v1/agent/"
     );
 
     private final EthSimulatorProperties properties;

@@ -12,7 +12,7 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-@EnableConfigurationProperties(EthSimulatorProperties.class)
+@EnableConfigurationProperties({EthSimulatorProperties.class, AgentAiProperties.class})
 public class AppConfig {
 
     @Bean

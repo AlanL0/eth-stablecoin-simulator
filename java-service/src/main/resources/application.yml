@@ -53,6 +53,21 @@ eth-simulator:
   rate-limit-burst: 10
   rate-limit-max-clients: 10000
   rate-limit-trust-forwarded-for: false
+  agent:
+    enabled: true
+    max-turns: 3
+    connect-timeout-ms: 5000
+    read-timeout-ms: 12000
+    allowed-base-url-prefixes:
+      deepseek:
+        - https://api.deepseek.com
+      nvidia:
+        - https://integrate.api.nvidia.com
+      openrouter:
+        - https://openrouter.ai/api
+      ollama:
+        - http://localhost:11434
+        - http://127.0.0.1:11434
   http-connect-timeout-ms: 5000
   http-read-timeout-ms: 10000
   rpc-connect-timeout-ms: 5000
