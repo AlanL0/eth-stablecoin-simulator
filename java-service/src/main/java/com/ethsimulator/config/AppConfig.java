@@ -1,5 +1,6 @@
 package com.ethsimulator.config;
 
+import com.ethsimulator.agent.budget.AgentBudgetProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,7 +13,7 @@ import java.time.Clock;
 import java.time.Duration;
 
 @Configuration
-@EnableConfigurationProperties({EthSimulatorProperties.class, AgentAiProperties.class})
+@EnableConfigurationProperties({EthSimulatorProperties.class, AgentAiProperties.class, AgentBudgetProperties.class})
 public class AppConfig {
 
     @Bean
