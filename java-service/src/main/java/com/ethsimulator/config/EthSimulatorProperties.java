@@ -25,6 +25,12 @@ public class EthSimulatorProperties {
     private int rpcReadTimeoutMs = 30_000;
     private int rpcCallTimeoutMs = 30_000;
     private int blockingIoMaxConcurrency = 64;
+    private int yieldStaleThresholdSeconds = 3600;
+    private boolean rateLimitEnabled = true;
+    private int rateLimitRequestsPerMinute = 30;
+    private int rateLimitBurst = 10;
+    private int rateLimitMaxClients = 10_000;
+    private boolean rateLimitTrustForwardedFor = false;
 
     public BigDecimal getStaticEthPriceUsd() {
         return staticEthPriceUsd;
@@ -160,5 +166,53 @@ public class EthSimulatorProperties {
 
     public void setBlockingIoMaxConcurrency(int blockingIoMaxConcurrency) {
         this.blockingIoMaxConcurrency = blockingIoMaxConcurrency;
+    }
+
+    public int getYieldStaleThresholdSeconds() {
+        return yieldStaleThresholdSeconds;
+    }
+
+    public void setYieldStaleThresholdSeconds(int yieldStaleThresholdSeconds) {
+        this.yieldStaleThresholdSeconds = yieldStaleThresholdSeconds;
+    }
+
+    public boolean isRateLimitEnabled() {
+        return rateLimitEnabled;
+    }
+
+    public void setRateLimitEnabled(boolean rateLimitEnabled) {
+        this.rateLimitEnabled = rateLimitEnabled;
+    }
+
+    public int getRateLimitRequestsPerMinute() {
+        return rateLimitRequestsPerMinute;
+    }
+
+    public void setRateLimitRequestsPerMinute(int rateLimitRequestsPerMinute) {
+        this.rateLimitRequestsPerMinute = rateLimitRequestsPerMinute;
+    }
+
+    public int getRateLimitBurst() {
+        return rateLimitBurst;
+    }
+
+    public void setRateLimitBurst(int rateLimitBurst) {
+        this.rateLimitBurst = rateLimitBurst;
+    }
+
+    public int getRateLimitMaxClients() {
+        return rateLimitMaxClients;
+    }
+
+    public void setRateLimitMaxClients(int rateLimitMaxClients) {
+        this.rateLimitMaxClients = rateLimitMaxClients;
+    }
+
+    public boolean isRateLimitTrustForwardedFor() {
+        return rateLimitTrustForwardedFor;
+    }
+
+    public void setRateLimitTrustForwardedFor(boolean rateLimitTrustForwardedFor) {
+        this.rateLimitTrustForwardedFor = rateLimitTrustForwardedFor;
     }
 }

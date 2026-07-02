@@ -15,6 +15,9 @@ public record YieldQuote(
         RateConvention convention,
         String source,
         RiskTier riskTier,
-        Instant observedAt
+        @Schema(description = "True observation time for live rows; EPOCH for static seed assumptions")
+        Instant observedAt,
+        @Schema(description = "True when data is stale, seed-based, or otherwise not live-ingested")
+        boolean degraded
 ) {
 }

@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
+import { sanitizeReturnPath } from "@/lib/navigation";
 import { getSupabasePublicKey, getSupabaseUrl } from "@/lib/supabase/config";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
@@ -9,7 +10,7 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/profile";
+  const next = sanitizeReturnPath(searchParams.get("next"));
 
   const url = getSupabaseUrl();
   const key = getSupabasePublicKey();

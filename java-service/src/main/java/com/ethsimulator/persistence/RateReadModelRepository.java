@@ -34,6 +34,23 @@ public class RateReadModelRepository {
                 .optional();
     }
 
+    public List<RateObservation> findLatestByProducts(List<String> products) {
+        if (products == null || products.isEmpty()) {
+            return List.of();
+        }
+        String placeholders = String.join(", ", products.stream().map(product -> "?").toList());
+        var statement = jdbcClient.sql("""
+                select id, protocol, product, side, annualized_value, convention, methodology,
+                       lookback_window, contract_address, chain_id, block_number, block_hash,
+                       observed_at, source_timestamp, created_at
+                from rate_observations_latest
+                where upper(product) in (""" + placeholders + ")");
+        for (String product : products) {
+            statement = statement.param(product.toUpperCase());
+        }
+        return statement.query(PersistenceRowMappers.RATE_OBSERVATION).list();
+    }
+
     public List<RateObservation> findHistory(String protocol, String product, String side, int limit) {
         return jdbcClient.sql("""
                 select id, protocol, product, side, annualized_value, convention, methodology,

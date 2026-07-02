@@ -13,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -23,6 +25,8 @@ public class AuditCache {
     private final Duration ttl;
     private final int maxAddresses;
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CompletableFuture<List<TransferEventRecord>>> inFlight =
+            new ConcurrentHashMap<>();
 
     public AuditCache(
             TransferEventFetcher transferEventFetcher,
@@ -43,10 +47,28 @@ public class AuditCache {
             return existing.events;
         }
 
-        List<TransferEventRecord> loaded = loadAndDedupe(normalizedAddress);
-        cache.put(normalizedAddress, new CacheEntry(loaded, now));
-        evictIfNeeded();
-        return loaded;
+        CompletableFuture<List<TransferEventRecord>> future = inFlight.compute(normalizedAddress, (key, current) -> {
+            if (current != null) {
+                return current;
+            }
+            CompletableFuture<List<TransferEventRecord>> created = CompletableFuture.supplyAsync(
+                    () -> loadAndDedupe(key)
+            );
+            created.whenComplete((result, error) -> inFlight.remove(key));
+            return created;
+        });
+
+        try {
+            List<TransferEventRecord> loaded = future.join();
+            cache.put(normalizedAddress, new CacheEntry(loaded, clock.instant()));
+            evictIfNeeded();
+            return loaded;
+        } catch (CompletionException ex) {
+            if (ex.getCause() instanceof RuntimeException runtime) {
+                throw runtime;
+            }
+            throw ex;
+        }
     }
 
     public String source() {
@@ -55,6 +77,7 @@ public class AuditCache {
 
     void clear() {
         cache.clear();
+        inFlight.clear();
     }
 
     private List<TransferEventRecord> loadAndDedupe(String address) {
@@ -73,14 +96,15 @@ public class AuditCache {
         }
         Instant now = clock.instant();
         cache.entrySet().removeIf(entry -> entry.getValue().loadedAt.plus(ttl).isBefore(now));
-        while (cache.size() > maxAddresses) {
-            String oldestKey = cache.entrySet().stream()
-                    .min(Map.Entry.comparingByValue((a, b) -> a.loadedAt.compareTo(b.loadedAt)))
-                    .map(Map.Entry::getKey)
-                    .orElse(null);
-            if (oldestKey == null) {
-                break;
+        String oldestKey = null;
+        Instant oldestAt = null;
+        for (Map.Entry<String, CacheEntry> entry : cache.entrySet()) {
+            if (oldestAt == null || entry.getValue().loadedAt.isBefore(oldestAt)) {
+                oldestAt = entry.getValue().loadedAt;
+                oldestKey = entry.getKey();
             }
+        }
+        if (oldestKey != null) {
             cache.remove(oldestKey);
         }
     }

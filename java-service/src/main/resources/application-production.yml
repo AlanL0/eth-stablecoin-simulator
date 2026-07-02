@@ -1,0 +1,17 @@
+# Production profile: minimal actuator exposure, no interactive API docs.
+# Run with SPRING_PROFILES_ACTIVE=production (see .env.example).
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_EXPOSURE:health,info}
+  endpoint:
+    prometheus:
+      enabled: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

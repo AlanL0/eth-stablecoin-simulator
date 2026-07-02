@@ -28,7 +28,7 @@ public class DependencyHealthIndicators {
         return () -> {
             String rpcUrl = BlockchainConfig.resolveRpcUrl(environment);
             if (!StringUtils.hasText(rpcUrl)) {
-                return Health.down().withDetail("reason", "ETH_RPC_URL not configured").build();
+                return degraded("ETH_RPC_URL not configured");
             }
             boolean httpReady = web3jProvider.getIfAvailable() != null;
             boolean wsReady = webSocketProvider.getIfAvailable() != null;
@@ -37,7 +37,7 @@ public class DependencyHealthIndicators {
                         .withDetail("transport", httpReady ? "http" : "websocket")
                         .build();
             }
-            return Health.down().withDetail("reason", "RPC URL present but Web3j client not initialized").build();
+            return degraded("RPC URL present but Web3j client not initialized");
         };
     }
 
@@ -46,7 +46,7 @@ public class DependencyHealthIndicators {
         return () -> {
             DataSource dataSource = dataSourceProvider.getIfAvailable();
             if (dataSource == null) {
-                return Health.down().withDetail("reason", "DATABASE_URL not configured").build();
+                return degraded("DATABASE_URL not configured");
             }
             return Health.up().withDetail("status", "configured").build();
         };
@@ -57,9 +57,13 @@ public class DependencyHealthIndicators {
         return () -> {
             ChatModel chatModel = chatModelProvider.getIfAvailable();
             if (chatModel == null || chatModel instanceof UnavailableChatModel || !AiConfig.hasLlmCredentials(environment)) {
-                return Health.down().withDetail("reason", "LLM credentials not configured").build();
+                return degraded("LLM credentials not configured");
             }
             return Health.up().withDetail("status", "configured").build();
         };
+    }
+
+    private static Health degraded(String reason) {
+        return Health.up().withDetail("degraded", true).withDetail("reason", reason).build();
     }
 }

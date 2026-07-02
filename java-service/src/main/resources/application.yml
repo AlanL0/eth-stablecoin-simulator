@@ -20,6 +20,7 @@ spring:
         options:
           model: ${MODEL_PRIMARY:gpt-4o-mini}
 
+# Default (local dev): full actuator + Swagger. Production must set SPRING_PROFILES_ACTIVE=production.
 management:
   endpoints:
     web:
@@ -46,6 +47,12 @@ eth-simulator:
   audit-max-events-per-wallet: 500
   audit-cache-max-addresses: 100
   audit-cache-ttl-seconds: 900
+  yield-stale-threshold-seconds: 3600
+  rate-limit-enabled: true
+  rate-limit-requests-per-minute: 30
+  rate-limit-burst: 10
+  rate-limit-max-clients: 10000
+  rate-limit-trust-forwarded-for: false
   http-connect-timeout-ms: 5000
   http-read-timeout-ms: 10000
   rpc-connect-timeout-ms: 5000

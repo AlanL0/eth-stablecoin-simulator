@@ -124,9 +124,9 @@ class ChartBuildersTest {
                 "USDC",
                 List.of(
                         new YieldQuote("aave", FinancialMath.bd("4.2"), RateConvention.APR_EFFECTIVE,
-                                "seed", RiskTier.LOW, FIXTURE_TIME),
+                                "seed", RiskTier.LOW, FIXTURE_TIME, false),
                         new YieldQuote("static_conservative", FinancialMath.bd("3.0"), RateConvention.APR_EFFECTIVE,
-                                "static_fallback", RiskTier.LOW, staleObserved)
+                                "static_fallback", RiskTier.LOW, staleObserved, true)
                 ),
                 FIXTURE_TIME
         );

@@ -255,13 +255,22 @@ public final class ChartBuilders {
         List<DataPoint> points = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
 
+        boolean seedWarningAdded = false;
+        boolean staleWarningAdded = false;
         for (YieldQuote quote : quotes) {
             points.add(xy(quote.protocol(), quote.apyPct(), FinancialMath.USD_SCALE));
-            if ("static_fallback".equals(quote.source())) {
+            if (!seedWarningAdded
+                    && (quote.degraded()
+                    || "static_fallback".equals(quote.source())
+                    || "seed".equals(quote.source()))) {
                 warnings.add("Protocol return quotes use static fallback seed data.");
+                seedWarningAdded = true;
             }
-            if (quote.observedAt() != null && quote.observedAt().isBefore(generatedAt.minusSeconds(3600))) {
+            if (!staleWarningAdded
+                    && quote.observedAt() != null
+                    && quote.observedAt().isBefore(generatedAt.minusSeconds(3600))) {
                 warnings.add("One or more protocol return quotes may be stale.");
+                staleWarningAdded = true;
             }
         }
 

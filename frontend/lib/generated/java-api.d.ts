@@ -317,7 +317,6 @@ export interface components {
              */
             axis: "x" | "y";
             /**
-             * Format: double
              * @description Primary plot coordinate
              * @default
              */
@@ -328,7 +327,6 @@ export interface components {
              */
             displayValue: string;
             /**
-             * Format: double
              * @description Secondary plot coordinate (band end)
              * @default
              */
@@ -499,7 +497,6 @@ export interface components {
              */
             strokeDash: "solid" | "dashed" | "dotted";
             /**
-             * Format: double
              * @description Fill opacity for area/band geometry
              * @default
              * @example 0.2
@@ -521,7 +518,6 @@ export interface components {
              */
             x: unknown;
             /**
-             * Format: double
              * @description Server-rounded Y coordinate for plotting
              * @default
              * @example 216.02
@@ -660,16 +656,42 @@ export interface components {
         };
         YieldQuote: {
             protocol?: string;
-            apyPct?: number;
+            /**
+             * @description Annualized yield as human percent
+             * @default
+             * @example 4.2
+             */
+            apyPct: number;
+            /**
+             * @description Explicit annualization convention for apyPct
+             * @default
+             * @enum {string}
+             */
+            convention: "APR_SIMPLE" | "APR_EFFECTIVE" | "SPOT_USD";
             source?: string;
             /** @enum {string} */
             riskTier?: "LOW" | "MEDIUM" | "HIGH";
-            /** Format: date-time */
-            observedAt?: string;
+            /**
+             * Format: date-time
+             * @description True observation time for live rows; EPOCH for static seed assumptions
+             * @default
+             */
+            observedAt: string;
+            /**
+             * @description True when data is stale, seed-based, or otherwise not live-ingested
+             * @default false
+             */
+            degraded: boolean;
         };
         YieldSnapshotResponse: {
             asset?: string;
             yields?: components["schemas"]["YieldQuote"][];
+            /**
+             * @description live when ingested rates are served; seed_fallback otherwise
+             * @default
+             * @enum {string}
+             */
+            dataMode: "live" | "seed_fallback";
         };
         StablecoinBalance: {
             symbol?: string;

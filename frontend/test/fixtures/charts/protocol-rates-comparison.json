@@ -41,7 +41,7 @@
     "chartType" : "bar",
     "asset" : "USDC"
   },
-  "warnings" : [ ],
+  "warnings" : [ "Protocol return quotes use static fallback seed data." ],
   "provenance" : {
     "builder" : "java-service/protocol-rates-chart-builder",
     "generatedAt" : "2026-06-09T12:00:01Z",
