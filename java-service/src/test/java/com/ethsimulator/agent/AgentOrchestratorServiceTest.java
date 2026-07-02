@@ -1,5 +1,11 @@
 package com.ethsimulator.agent;
 
+import com.ethsimulator.agent.budget.AgentBudgetGuard;
+import com.ethsimulator.agent.budget.AgentBudgetProperties;
+import com.ethsimulator.agent.budget.AgentCostLedger;
+import com.ethsimulator.agent.budget.AgentDailyBudgetTracker;
+import com.ethsimulator.agent.budget.AgentModelBulkhead;
+import com.ethsimulator.agent.budget.AgentRunRecorder;
 import com.ethsimulator.agent.dto.AgentAnalyzeRequest;
 import com.ethsimulator.agent.support.AutoToolExecutingChatModel;
 import com.ethsimulator.agent.support.ProviderShapedChatModel;
@@ -7,14 +13,20 @@ import com.ethsimulator.agent.support.ScriptedChatModel;
 import com.ethsimulator.agent.tools.FixedIncomeAnalyticsTools;
 import com.ethsimulator.config.AgentAiProperties;
 import com.ethsimulator.config.UnavailableChatModel;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
@@ -32,19 +44,47 @@ class AgentOrchestratorServiceTest {
 
     private ScriptedChatModel chatModel;
     private AgentOrchestratorService orchestratorService;
+    private AgentBudgetProperties budgetProperties;
 
     @BeforeEach
     void setUp() {
         chatModel = new ScriptedChatModel();
+        Clock clock = Clock.fixed(FIXED_TIME, ZoneOffset.UTC);
         AgentAiProperties properties = new AgentAiProperties();
         properties.setEnabled(true);
-        properties.setMaxTurns(3);
+
+        budgetProperties = new AgentBudgetProperties();
+        budgetProperties.setDailyModelCallCap(100);
+        budgetProperties.setDailyUsdBudget(new BigDecimal("100.000000"));
+        budgetProperties.validateAndClamp();
+
+        AgentDailyBudgetTracker dailyBudgetTracker = new AgentDailyBudgetTracker(budgetProperties, clock);
+        AgentCostLedger costLedger = new AgentCostLedger();
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        AgentBudgetGuard budgetGuard = new AgentBudgetGuard(
+                budgetProperties,
+                dailyBudgetTracker,
+                costLedger,
+                meterRegistry
+        );
+        AgentModelBulkhead bulkhead = new AgentModelBulkhead(budgetProperties);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<com.ethsimulator.persistence.AgentRunRepository> repositoryProvider =
+                mock(ObjectProvider.class);
+        when(repositoryProvider.getIfAvailable()).thenReturn(null);
+        AgentRunRecorder runRecorder = new AgentRunRecorder(repositoryProvider, meterRegistry);
+
         orchestratorService = new AgentOrchestratorService(
                 chatModel,
                 analyticsTools,
-                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
+                new AgentDeterministicFallbackService(analyticsTools, clock),
                 properties,
-                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
+                budgetProperties,
+                budgetGuard,
+                bulkhead,
+                costLedger,
+                runRecorder,
+                clock
         );
     }
 
@@ -67,16 +107,7 @@ class AgentOrchestratorServiceTest {
         ProviderShapedChatModel providerModel = new ProviderShapedChatModel();
         providerModel.enqueue(toolCallResponse("getLatestYields", "{\"asset\":\"USDC\"}"));
         providerModel.enqueue(textResponse("USDC yields are authoritative from Java tools."));
-        AgentAiProperties properties = new AgentAiProperties();
-        properties.setEnabled(true);
-        properties.setMaxTurns(3);
-        AgentOrchestratorService providerBacked = new AgentOrchestratorService(
-                providerModel,
-                analyticsTools,
-                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
-                properties,
-                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
-        );
+        AgentOrchestratorService providerBacked = orchestratorWithChatModel(providerModel);
 
         var response = providerBacked.analyze(new AgentAnalyzeRequest("Compare USDC yields", "provider-shaped"));
 
@@ -89,21 +120,42 @@ class AgentOrchestratorServiceTest {
 
     @Test
     void autoExecutingChatModelBypassesManualProvenance() {
-        AgentAiProperties properties = new AgentAiProperties();
-        properties.setEnabled(true);
-        properties.setMaxTurns(3);
-        AgentOrchestratorService autoExecuting = new AgentOrchestratorService(
-                new AutoToolExecutingChatModel(),
-                analyticsTools,
-                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
-                properties,
-                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
-        );
+        AgentOrchestratorService autoExecuting = orchestratorWithChatModel(new AutoToolExecutingChatModel());
 
         var response = autoExecuting.analyze(new AgentAnalyzeRequest("Compare USDC yields", "auto-exec"));
 
         assertThat(response.toolProvenance()).isEmpty();
         assertThat(response.narrative()).contains("Auto-executed");
+    }
+
+    private AgentOrchestratorService orchestratorWithChatModel(org.springframework.ai.chat.model.ChatModel model) {
+        Clock clock = Clock.fixed(FIXED_TIME, ZoneOffset.UTC);
+        AgentAiProperties properties = new AgentAiProperties();
+        properties.setEnabled(true);
+        AgentBudgetProperties localBudget = new AgentBudgetProperties();
+        localBudget.setDailyModelCallCap(100);
+        localBudget.setDailyUsdBudget(new BigDecimal("100.000000"));
+        localBudget.validateAndClamp();
+        AgentDailyBudgetTracker dailyBudgetTracker = new AgentDailyBudgetTracker(localBudget, clock);
+        AgentCostLedger costLedger = new AgentCostLedger();
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        AgentBudgetGuard budgetGuard = new AgentBudgetGuard(localBudget, dailyBudgetTracker, costLedger, meterRegistry);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<com.ethsimulator.persistence.AgentRunRepository> repositoryProvider =
+                mock(ObjectProvider.class);
+        when(repositoryProvider.getIfAvailable()).thenReturn(null);
+        return new AgentOrchestratorService(
+                model,
+                analyticsTools,
+                new AgentDeterministicFallbackService(analyticsTools, clock),
+                properties,
+                localBudget,
+                budgetGuard,
+                new AgentModelBulkhead(localBudget),
+                costLedger,
+                new AgentRunRecorder(repositoryProvider, meterRegistry),
+                clock
+        );
     }
 
     @Test
@@ -120,14 +172,30 @@ class AgentOrchestratorServiceTest {
 
     @Test
     void disabledModelFallsBackWithoutCallingProvider() {
+        Clock clock = Clock.fixed(FIXED_TIME, ZoneOffset.UTC);
         AgentAiProperties properties = new AgentAiProperties();
         properties.setEnabled(true);
+        AgentBudgetProperties localBudget = new AgentBudgetProperties();
+        localBudget.validateAndClamp();
+        AgentDailyBudgetTracker dailyBudgetTracker = new AgentDailyBudgetTracker(localBudget, clock);
+        AgentCostLedger costLedger = new AgentCostLedger();
+        SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+        AgentBudgetGuard budgetGuard = new AgentBudgetGuard(localBudget, dailyBudgetTracker, costLedger, meterRegistry);
+        @SuppressWarnings("unchecked")
+        ObjectProvider<com.ethsimulator.persistence.AgentRunRepository> disabledRepositoryProvider =
+                mock(ObjectProvider.class);
+        when(disabledRepositoryProvider.getIfAvailable()).thenReturn(null);
         AgentOrchestratorService disabled = new AgentOrchestratorService(
                 new UnavailableChatModel(),
                 analyticsTools,
-                new AgentDeterministicFallbackService(analyticsTools, Clock.fixed(FIXED_TIME, ZoneOffset.UTC)),
+                new AgentDeterministicFallbackService(analyticsTools, clock),
                 properties,
-                Clock.fixed(FIXED_TIME, ZoneOffset.UTC)
+                localBudget,
+                budgetGuard,
+                new AgentModelBulkhead(localBudget),
+                costLedger,
+                new AgentRunRecorder(disabledRepositoryProvider, meterRegistry),
+                clock
         );
 
         var response = disabled.analyze(new AgentAnalyzeRequest("unknown question about poetry", "corr"));

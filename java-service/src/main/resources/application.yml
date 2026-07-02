@@ -58,6 +58,20 @@ eth-simulator:
     max-turns: 3
     connect-timeout-ms: 5000
     read-timeout-ms: 12000
+    budget:
+      request-timeout-ms: 20000
+      model-call-timeout-ms: 12000
+      tool-call-timeout-ms: 5000
+      max-turns: 3
+      max-tool-executions: 4
+      max-charts: 1
+      max-output-tokens: 1200
+      daily-model-call-cap: 200
+      daily-usd-budget: 5.000000
+      input-token-usd-per-1k: 0.001000
+      output-token-usd-per-1k: 0.003000
+      estimated-input-tokens-per-call: 1500
+      max-concurrent-model-calls: 8
     allowed-base-url-prefixes:
       deepseek:
         - https://api.deepseek.com
