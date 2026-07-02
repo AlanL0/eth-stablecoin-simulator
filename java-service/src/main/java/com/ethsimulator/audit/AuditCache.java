@@ -48,13 +48,13 @@ public class AuditCache {
         }
 
         CompletableFuture<List<TransferEventRecord>> future = inFlight.compute(normalizedAddress, (key, current) -> {
-            if (current != null) {
+            if (current != null && !current.isDone()) {
                 return current;
             }
             CompletableFuture<List<TransferEventRecord>> created = CompletableFuture.supplyAsync(
                     () -> loadAndDedupe(key)
             );
-            created.whenComplete((result, error) -> inFlight.remove(key));
+            created.whenComplete((ignored, error) -> inFlight.remove(key, created));
             return created;
         });
 

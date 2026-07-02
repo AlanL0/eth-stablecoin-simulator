@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,12 +21,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuditCacheSingleFlightTest {
 
     private static final String ADDRESS = "0xd8da6bf26964af9d7eed9e03e53415d37aa96045";
+    private static final String NORMALIZED_ADDRESS = ADDRESS.toLowerCase(Locale.ROOT);
     private static final Instant EVENT_TIME = Instant.parse("2026-01-10T00:00:00Z");
 
     @Mock
@@ -47,7 +51,7 @@ class AuditCacheSingleFlightTest {
         CountDownLatch release = new CountDownLatch(1);
         AtomicInteger fetchCount = new AtomicInteger();
 
-        when(transferEventFetcher.fetchTransferEvents(ADDRESS)).thenAnswer(invocation -> {
+        when(transferEventFetcher.fetchTransferEvents(eq(NORMALIZED_ADDRESS))).thenAnswer(invocation -> {
             fetchCount.incrementAndGet();
             started.countDown();
             assertThat(release.await(5, TimeUnit.SECONDS)).isTrue();
@@ -69,16 +73,34 @@ class AuditCacheSingleFlightTest {
     }
 
     @Test
+    void completedFailureDoesNotBlockRetry() {
+        AtomicInteger attempts = new AtomicInteger();
+        when(transferEventFetcher.fetchTransferEvents(eq(NORMALIZED_ADDRESS))).thenAnswer(invocation -> {
+            if (attempts.incrementAndGet() == 1) {
+                throw new RuntimeException("rpc down");
+            }
+            return List.of(event("0xretry", 2));
+        });
+
+        assertThatThrownBy(() -> auditCache.eventsFor(ADDRESS))
+                .isInstanceOf(RuntimeException.class);
+
+        assertThat(auditCache.eventsFor(ADDRESS)).hasSize(1);
+        assertThat(auditCache.eventsFor(ADDRESS)).hasSize(1);
+        assertThat(attempts.get()).isEqualTo(2);
+    }
+
+    @Test
     void failedLoadDoesNotPoisonCacheAndRetries() {
         AtomicInteger attempts = new AtomicInteger();
-        when(transferEventFetcher.fetchTransferEvents(ADDRESS)).thenAnswer(invocation -> {
+        when(transferEventFetcher.fetchTransferEvents(eq(NORMALIZED_ADDRESS))).thenAnswer(invocation -> {
             if (attempts.incrementAndGet() == 1) {
                 throw new RuntimeException("rpc down");
             }
             return List.of(event("0xdef", 1));
         });
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> auditCache.eventsFor(ADDRESS))
+        assertThatThrownBy(() -> auditCache.eventsFor(ADDRESS))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("rpc down");
 
